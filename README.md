@@ -8,6 +8,8 @@ My personal lab for practice projects and learning. Each folder is an independen
 | [heang-dev-lab](heang-dev-lab/) | Store admin system (Korean enterprise stack) | Spring Boot, MyBatis, PostgreSQL, Thymeleaf, Maven |
 | [java-core-mastery-lab](java-core-mastery-lab/) | Core Java practice — OOP, collections, generics, design patterns, mini projects | Java 21 |
 | [spring-boot-lab](spring-boot-lab/) | Spring Boot learning path, organized by topic (web, data, security, messaging, testing, cloud, AI) | Spring Boot |
+| [AuthHub](AuthHub/) | Authentication hub — multi-module project (common-api, security-api, todoapi) | Spring Boot, Gradle |
+| [spring_jwt_authentication](spring_jwt_authentication/) | JWT authentication practice | Spring Boot, Gradle |
 
 ## Notes
 
