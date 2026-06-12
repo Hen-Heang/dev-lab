@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.heang.springmybatistest.mapper.ProductMapper">
+
+    <!-- Result Map - DB column to Java field mapping -->
+    <resultMap id="ProductMap" type="com.heang.springmybatistest.model.Product">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="price" column="price"/>
+        <result property="stock" column="stock"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="categoryName" column="category_name"/>
+    </resultMap>
+
+    <sql id="ProductSearchWhere">
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND LOWER(p.name) LIKE LOWER(CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND p.category_id = #{categoryId}
+            </if>
+            <if test="minPrice != null">
+                AND p.price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND p.price &lt;= #{maxPrice}
+            </if>
+        </where>
+    </sql>
+
+    <sql id="ProductSearchOrder">
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'name'">p.name</when>
+            <when test="sortBy == 'price'">p.price</when>
+            <when test="sortBy == 'stock'">p.stock</when>
+            <when test="sortBy == 'createdAt'">p.created_at</when>
+            <otherwise>p.id</otherwise>
+        </choose>
+        <choose>
+            <when test="sortOrder == 'ASC'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+    </sql>
+
+    <!-- INSERT -->
+    <insert id="insertProduct" parameterType="com.heang.springmybatistest.dto.ProductRequest">
+        INSERT INTO product (name, price, stock, category_id, image_url)
+        VALUES (#{name}, #{price}, #{stock}, #{categoryId}, #{imageUrl})
+    </insert>
+
+    <!-- SELECT ALL with category JOIN -->
+    <select id="selectProductList" resultMap="ProductMap">
+        SELECT p.id,
+               p.name,
+               p.price,
+               p.stock,
+               p.category_id,
+               p.created_at,
+               c.name AS category_name
+        FROM product p
+                 LEFT JOIN category c ON p.category_id = c.id
+        ORDER BY p.id DESC
+    </select>
+
+    <select id="searchProducts" parameterType="com.heang.springmybatistest.dto.ProductSearchRequest"
+            resultMap="ProductMap">
+        SELECT
+        p.id,
+        p.name,
+        p.price,
+        p.stock,
+        p.category_id,
+        p.created_at,
+        c.name AS category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        <include refid="ProductSearchWhere"/>
+        <include refid="ProductSearchOrder"/>
+    </select>
+
+    <select id="searchProductsPaged" parameterType="com.heang.springmybatistest.dto.ProductSearchRequest"
+            resultMap="ProductMap">
+        SELECT
+        p.id,
+        p.name,
+        p.price,
+        p.stock,
+        p.category_id,
+        p.created_at,
+        c.name AS category_name
+        FROM product p
+        LEFT JOIN category c ON p.category_id = c.id
+        <include refid="ProductSearchWhere"/>
+        <include refid="ProductSearchOrder"/>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countProducts" parameterType="com.heang.springmybatistest.dto.ProductSearchRequest" resultType="int">
+        SELECT COUNT(*)
+        FROM product p
+        <include refid="ProductSearchWhere"/>
+    </select>
+
+    <!--
+        SELECT BY ID — fetch one product with its category name
+        단건 조회 — 카테고리명 포함
+
+        LEFT JOIN: return the product even if category_id has no match in category table.
+                   (INNER JOIN would silently drop products with missing/deleted categories)
+        좌측 조인: 카테고리가 없는 상품도 반환 (카테고리 삭제되어도 상품은 표시됨)
+
+        p.category_id → FK stored on the product row (상품 테이블의 외래키)
+        c.name AS category_name → pulled from category table, NULL if no match
+        #{id} → safely binds the Long parameter (SQL injection 방지)
+    -->
+
+    <select id="selectProductById" parameterType="long" resultMap="ProductMap">
+        SELECT p.id,
+               p.name,
+               p.price,
+               p.stock,
+               p.category_id,
+               p.created_at,
+               c.name AS category_name  <!-- NULL if category was deleted (카테고리 없으면 NULL) -->
+        FROM product p
+                 LEFT JOIN category c ON p.category_id = c.id  <!-- join key: product.category_id = category.id -->
+        WHERE p.id = #{id}
+    </select>
+
+    <!-- SELECT BY CATEGORY ID -->
+    <select id="selectProductByCategoryId" parameterType="long" resultMap="ProductMap">
+        SELECT p.id,
+               p.name,
+               p.price,
+               p.stock,
+               p.category_id,
+               p.created_at,
+               c.name AS category_name
+        FROM product p
+                 LEFT JOIN category c ON p.category_id = c.id
+        WHERE p.category_id = #{categoryId}
+        ORDER BY p.id DESC
+    </select>
+
+    <!-- UPDATE -->
+    <update id="updateProduct">
+        UPDATE product
+        SET name        = #{req.name},
+            price       = #{req.price},
+            stock       = #{req.stock},
+            category_id = #{req.categoryId},
+            image_url   = #{req.imageUrl}
+        WHERE id = #{id}
+    </update>
+
+    <!-- DELETE -->
+    <delete id="deleteProduct" parameterType="long">
+        DELETE
+        FROM product
+        WHERE id = #{id}
+    </delete>
+
+    <!-- COUNT ALL -->
+    <select id="countProduct" resultType="int">
+        SELECT COUNT(*)
+        FROM product
+    </select>
+
+    <!-- COUNT BY CATEGORY -->
+    <select id="countProductByCategoryId" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM product
+        WHERE category_id = #{categoryId}
+    </select>
+
+</mapper>

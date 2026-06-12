@@ -1,0 +1,18 @@
+# ====================================================
+# PROD PROFILE — active when spring.profiles.active=prod
+# Use environment variables in production — never hardcode credentials!
+# ====================================================
+app:
+  name: MyApp (Production)
+  email:
+    host: ${SMTP_HOST:smtp.gmail.com}   # reads env var, fallback if not set
+    port: ${SMTP_PORT:465}
+    username: ${SMTP_USER:noreply@myapp.com}
+    ssl: true
+
+logging:
+  level:
+    com.rean: INFO   # less verbose in production
+
+server:
+  port: ${PORT:8080}

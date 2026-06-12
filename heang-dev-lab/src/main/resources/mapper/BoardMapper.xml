@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    namespace must exactly match the Java interface full path
+    namespace는 Java 인터페이스 전체 경로와 반드시 일치해야 함
+-->
+<mapper namespace="com.heang.springmybatistest.mapper.BoardMapper">
+
+    <!--
+        ResultMap: Maps DB columns (snake_case) → Java fields (camelCase)
+        DB 컬럼(snake_case) → Java 필드(camelCase) 매핑
+    -->
+    <resultMap id="BoardResultMap" type="com.heang.springmybatistest.vo.BoardVO">
+        <id column="board_sn" property="boardSn"/>  <!-- PK -->
+        <result column="board_title" property="boardTitle"/>
+        <result column="board_cn" property="boardCn"/>
+        <result column="use_yn" property="useYn"/>
+        <result column="data_reg_dt" property="dataRegDt"/>
+    </resultMap>
+
+    <!--
+        SELECT ALL
+        Get all active boards, newest first
+        활성 게시글 전체 조회 (최신순)
+
+        id="findAll" must match: List<Board> findAll() in BoardMapper.java
+    -->
+    <select id="findAll" resultMap="BoardResultMap">
+        SELECT board_sn,
+               board_title,
+               board_cn,
+               use_yn,
+               data_reg_dt
+        FROM co_smp_board_m
+        WHERE use_yn = 'Y'
+        ORDER BY board_sn DESC
+    </select>
+
+    <!--
+        SELECT BY ID
+        Get one board by primary key
+        PK로 단건 조회
+
+        parameterType="Long" → method receives a Long value
+        #{boardSn} → safely binds the value (prevents SQL injection)
+        id="findById" must match: Board findById(Long boardSn) in BoardMapper.java
+    -->
+    <select id="findById" parameterType="Long" resultMap="BoardResultMap">
+        SELECT board_sn,
+               board_title,
+               board_cn,
+               use_yn,
+               data_reg_dt
+        FROM co_smp_board_m
+        WHERE board_sn = #{boardSn}
+          AND use_yn = 'Y'
+    </select>
+
+    <!--
+        SELECT BY TITLE KEYWORD
+        Search boards where title contains the keyword
+        제목에 키워드가 포함된 게시글 검색
+
+        CONCAT('%', #{keyword}, '%') → safe LIKE pattern using #{}
+        id="findByTitle" must match: List<Board> findByTitle(String keyword) in BoardMapper.java
+    -->
+    <select id="findByTitle" parameterType="String" resultMap="BoardResultMap">
+        SELECT board_sn,
+               board_title,
+               board_cn,
+               use_yn,
+               data_reg_dt
+        FROM co_smp_board_m
+        WHERE board_title LIKE CONCAT('%', #{keyword}, '%')
+          AND use_yn = 'Y'
+        ORDER BY board_sn DESC
+    </select>
+
+    <!--
+        INSERT a new board post
+        게시글 등록
+
+        useGeneratedKeys="true" → get auto-generated PK back from DB
+        keyProperty="boardSn" → put the generated PK into board.boardSn
+        data_reg_dt not included → DB handles it with DEFAULT NOW()
+        id="insert" must match: void insert(Board board) in BoardMapper.java
+    -->
+    <insert id="insert" parameterType="com.heang.springmybatistest.vo.BoardVO"
+            useGeneratedKeys="true" keyProperty="boardSn">
+        INSERT INTO co_smp_board_m (board_title,
+                                    board_cn,
+                                    use_yn)
+        VALUES (#{boardTitle},
+                #{boardCn},
+                #{useYn})
+    </insert>
+
+    <!--
+        UPDATE title and content of an existing board
+        게시글 제목, 내용 수정
+
+        Returns int = number of rows updated (수정된 행 수 반환)
+        Check if rows == 0 → board not found
+
+        id="update" must match: int update(Board board) in BoardMapper.java
+    -->
+    <update id="update" parameterType="com.heang.springmybatistest.vo.BoardVO">
+        UPDATE co_smp_board_m
+        SET board_title = #{boardTitle},
+            board_cn    = #{boardCn}
+        WHERE board_sn = #{boardSn}
+          AND use_yn = 'Y'
+    </update>
+
+    <!--
+        SOFT DELETE
+        Do NOT physically delete — just set use_yn = 'N'
+        실제 삭제 아님 — use_yn을 'N'으로 변경 (소프트 삭제)
+
+        Why softly delete it?
+        - Government/banking projects must keep data history (감사 추적)
+        - Data can be recovered if needed (복구 가능)
+
+        Returns int = number of rows updated (수정된 행 수 반환)
+
+        id="delete" must match: int delete(Long boardSn) in BoardMapper.java
+    -->
+    <update id="delete" parameterType="Long">
+        UPDATE co_smp_board_m
+        SET use_yn = 'N'
+        WHERE board_sn = #{boardSn}
+    </update>
+
+    <select id="findBySearch" resultMap="BoardResultMap">
+        SELECT * FROM co_smp_board_m
+        <where>
+            AND use_yn = 'Y'
+            <if test="keyword != null and keyword != ''">
+                <choose>
+                    <when test="searchType == 'content'">
+                        AND board_cn LIKE '%' || #{keyword} || '%'
+                    </when>
+                    <otherwise>
+                        AND board_title LIKE '%' || #{keyword} || '%'
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+        ORDER BY board_sn DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countBySearch" resultType="int">
+        SELECT COUNT(*) FROM co_smp_board_m
+        <where>
+            AND use_yn = 'Y'
+
+            <if test="keyword != null and keyword != '' ">
+                AND board_title LIKE '%' || #{keyword} || '%'
+            </if>
+        </where>
+
+    </select>
+
+</mapper>

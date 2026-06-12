@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - Store Admin'">Product Management - Store Admin</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body class="sidebar-layout">
+
+<!-- ── Sidebar ── -->
+<aside th:replace="~{fragments/sidebar :: sidebar('product')}"></aside>
+
+<!-- ── Main Content ── -->
+<div class="main-content">
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">
+                Home <span>›</span> <strong th:text="${pageTitle}">Product Management</strong>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <a th:href="@{/swagger-ui.html}" class="topbar-btn" title="API Docs">🔌</a>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1 th:text="${pageTitle}">Product Management</h1>
+                <p>Manage pricing, stock, and category assignments.</p>
+            </div>
+            <button type="button" id="btnAdd" class="btn btn-primary">+ Add Product</button>
+        </div>
+
+        <!-- Search Filter -->
+        <div class="search-box">
+            <div class="search-row">
+                <div class="search-item">
+                    <label for="searchKeyword">Product Name</label>
+                    <input type="text" id="searchKeyword" class="form-control" placeholder="Search product">
+                </div>
+                <div class="search-item">
+                    <label for="searchCategory">Category</label>
+                    <select id="searchCategory" class="form-control">
+                        <option value="">All</option>
+                        <option th:each="category : ${categories}"
+                                th:value="${category.id}"
+                                th:text="${category.name}">Category</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label for="searchMinPrice">Min Price</label>
+                    <input type="number" id="searchMinPrice" class="form-control" placeholder="0">
+                </div>
+                <div class="search-item">
+                    <label for="searchMaxPrice">Max Price</label>
+                    <input type="number" id="searchMaxPrice" class="form-control" placeholder="999999">
+                </div>
+                <div class="search-item">
+                    <label for="searchSortBy">Sort By</label>
+                    <select id="searchSortBy" class="form-control">
+                        <option value="">Newest</option>
+                        <option value="name">Name</option>
+                        <option value="price">Price</option>
+                        <option value="stock">Stock</option>
+                        <option value="createdAt">Created At</option>
+                    </select>
+                </div>
+                <div class="search-item">
+                    <label for="searchSortOrder">Order</label>
+                    <select id="searchSortOrder" class="form-control">
+                        <option value="DESC">DESC</option>
+                        <option value="ASC">ASC</option>
+                    </select>
+                </div>
+                <div class="search-item search-actions">
+                    <button type="button" id="btnSearch" class="btn btn-primary">Search</button>
+                    <button type="button" id="btnReset" class="btn btn-secondary">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product List Table — tbody populated via AJAX (product.js) -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="productTableBody">
+                <tr>
+                    <td colspan="8" class="text-center">Loading data...</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<!-- Product Detail Modal -->
+<div id="productDetailModal" class="modal" onclick="if(event.target===this)closeDetailModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Product Detail</h3>
+            <button type="button" class="close-btn" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div style="padding:20px 24px;">
+            <div style="text-align:center;margin-bottom:20px;">
+                <img id="detailImage" src="" alt="Product Image"
+                     style="max-width:160px;max-height:160px;border-radius:10px;border:1px solid var(--line);display:none;">
+                <div id="detailImagePlaceholder"
+                     style="width:120px;height:120px;border-radius:10px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto;">📦</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;">
+                <tr style="border-bottom:1px solid var(--line);">
+                    <td style="padding:10px 0;font-size:12px;color:var(--muted);font-weight:600;width:100px;">ID</td>
+                    <td id="detailId" style="padding:10px 0;font-weight:500;"></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--line);">
+                    <td style="padding:10px 0;font-size:12px;color:var(--muted);font-weight:600;">Name</td>
+                    <td id="detailName" style="padding:10px 0;font-weight:600;font-size:16px;"></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--line);">
+                    <td style="padding:10px 0;font-size:12px;color:var(--muted);font-weight:600;">Category</td>
+                    <td id="detailCategory" style="padding:10px 0;"></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--line);">
+                    <td style="padding:10px 0;font-size:12px;color:var(--muted);font-weight:600;">Price</td>
+                    <td id="detailPrice" style="padding:10px 0;font-weight:600;color:var(--primary);"></td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--line);">
+                    <td style="padding:10px 0;font-size:12px;color:var(--muted);font-weight:600;">Stock</td>
+                    <td id="detailStock" style="padding:10px 0;"></td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 0;font-size:12px;color:var(--muted);font-weight:600;">Created At</td>
+                    <td id="detailCreatedAt" style="padding:10px 0;color:var(--muted);font-size:13px;"></td>
+                </tr>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Create/Edit Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Add Product</h3>
+            <button type="button" class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="productForm" enctype="multipart/form-data">
+            <input type="hidden" id="productId">
+            <div class="form-group">
+                <label for="productName">Product Name <span class="required">*</span></label>
+                <input type="text" id="productName" name="name" class="form-control"
+                       placeholder="Enter product name" required>
+            </div>
+            <div class="form-group">
+                <label for="productCategory">Category <span class="required">*</span></label>
+                <select id="productCategory" name="categoryId" class="form-control" required>
+                    <option value="">Select</option>
+                    <option th:each="category : ${categories}"
+                            th:value="${category.id}"
+                            th:text="${category.name}">Category</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="productPrice">Price <span class="required">*</span></label>
+                <input type="number" id="productPrice" name="price" class="form-control"
+                       placeholder="Enter price" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="productStock">Stock <span class="required">*</span></label>
+                <input type="number" id="productStock" name="stock" class="form-control"
+                       placeholder="Enter stock" min="0" required>
+            </div>
+            <div class="form-group">
+                <label for="productImage">Product Image</label>
+                <div id="imagePreviewBox" style="display:none; margin-bottom:8px;">
+                    <img id="imagePreview" src="" alt="Current Image"
+                         style="max-width:120px; max-height:120px; border:1px solid #ddd; border-radius:4px;">
+                </div>
+                <input type="file" id="productImage" name="imageFile"
+                       class="form-control" accept="image/*">
+                <small style="color:#888;">Leave empty to keep existing image</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script th:src="@{/js/product.js}"></script>
+</body>
+</html>

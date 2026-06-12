@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Board - Store Admin</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body class="sidebar-layout">
+
+<!-- ── Sidebar ── -->
+<aside th:replace="~{fragments/sidebar :: sidebar('board')}"></aside>
+
+<!-- ── Main Content ── -->
+<div class="main-content">
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">
+                Home <span>›</span>
+                <a th:href="@{/board/list.do}" style="color:var(--muted);text-decoration:none;">게시판 (Board)</a>
+                <span>›</span> <strong>수정 (Edit Post)</strong>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <a th:href="@{/swagger-ui.html}" class="topbar-btn" title="API Docs">🔌</a>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Edit Post <span style="font-size:14px;color:var(--muted);font-weight:400;">(게시글 수정)</span></h1>
+            </div>
+            <a th:href="@{/board/list.do}" class="btn btn-secondary">← Back to List</a>
+        </div>
+
+        <div class="card" style="max-width:720px;">
+            <div style="padding:22px;">
+                <form id="updateForm" method="post" th:action="@{/board/update.do}">
+                    <input type="hidden" name="boardSn" th:value="${board.boardSn}"/>
+
+                    <div class="form-group">
+                        <label>No (번호)</label>
+                        <input type="text" class="form-control" th:value="${board.boardSn}" readonly
+                               style="background:var(--bg);color:var(--muted);cursor:default;">
+                    </div>
+                    <div class="form-group">
+                        <label for="boardTitle">Title (제목) *</label>
+                        <input type="text" id="boardTitle" name="boardTitle" class="form-control"
+                               th:value="${board.boardTitle}"/>
+                        <span id="titleError" style="color:var(--danger);font-size:12px;display:none;">
+                            Title is required (제목을 입력하세요)
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="boardCn">Content (내용)</label>
+                        <textarea id="boardCn" name="boardCn" rows="8" class="form-control"
+                                  th:text="${board.boardCn}"></textarea>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:8px;">
+                        <button type="button" class="btn btn-success" onclick="submitUpdate()">Save (저장)</button>
+                        <button type="button" class="btn btn-secondary"
+                                th:onclick="|location.href='@{/board/detail.do(boardSn=${board.boardSn})}'|">Cancel (취소)</button>
+                        <button type="button" class="btn btn-secondary"
+                                th:onclick="|location.href='@{/board/list.do}'|">Back to List (목록)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    function submitUpdate() {
+        const title = $('#boardTitle').val().trim();
+        if (title === '') {
+            $('#titleError').show();
+            $('#boardTitle').focus();
+            return;
+        }
+        $('#titleError').hide();
+        $('#updateForm').submit();
+    }
+
+    $('#boardTitle').on('input', function () {
+        if ($(this).val().trim() !== '') $('#titleError').hide();
+    });
+</script>
+</body>
+</html>

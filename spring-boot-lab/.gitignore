@@ -1,0 +1,29 @@
+# Build output
+target/
+build/
+out/
+*.class
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven / Gradle wrapper noise
+.gradle/
+
+# Local config / secrets
+*.env

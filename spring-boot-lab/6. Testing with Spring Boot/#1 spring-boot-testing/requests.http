@@ -1,0 +1,40 @@
+### Product CRUD — spring-boot-testing
+# This is the app under test in section 6. Hit these endpoints manually to
+# understand the behavior, then read the tests that verify each one.
+
+@host = http://localhost:8080
+
+### Create a product -> 201 Created
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard",
+  "price": 89.99,
+  "category": "electronics"
+}
+
+### Get all products
+GET {{host}}/api/products
+
+### Get product by id
+GET {{host}}/api/products/1
+
+### Get products by category
+GET {{host}}/api/products/category/electronics
+
+### Update a product
+PUT {{host}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Mechanical Keyboard (RGB)",
+  "price": 99.99,
+  "category": "electronics"
+}
+
+### Trigger ResourceNotFoundException -> verified by an exception test
+GET {{host}}/api/products/999999
+
+### Delete a product -> 204 No Content
+DELETE {{host}}/api/products/1

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Board List - Store Admin</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body class="sidebar-layout">
+
+<!-- ── Sidebar ── -->
+<aside th:replace="~{fragments/sidebar :: sidebar('board')}"></aside>
+
+<!-- ── Main Content ── -->
+<div class="main-content">
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">홈 (Home) <span>›</span> <strong>게시판 (Board)</strong></div>
+        </div>
+        <div class="topbar-right">
+            <a th:href="@{/swagger-ui.html}" class="topbar-btn" title="API Docs">🔌</a>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Board List <span style="font-size:14px;color:var(--muted);font-weight:400;">(게시판 목록)</span></h1>
+                <p>Search and manage board posts.</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <a th:href="@{/excel/board}" class="btn btn-secondary">📥 Excel</a>
+                <a th:href="@{/board/insertForm.do}" class="btn btn-success">+ Write (등록)</a>
+            </div>
+        </div>
+
+        <!-- Search form — GET submit keeps search params in URL -->
+        <form id="searchForm" method="get" th:action="@{/board/list.do}" class="search-box" style="margin-bottom:16px;">
+            <div class="search-row">
+                <div class="search-item">
+                    <label>검색 유형 (Search By)</label>
+                    <select name="searchType" class="form-control">
+                        <option value="title" th:selected="${search.searchType == 'title'}">Title (제목)</option>
+                        <option value="content" th:selected="${search.searchType == 'content'}">Content (내용)</option>
+                    </select>
+                </div>
+                <div class="search-item" style="flex:1;">
+                    <label>검색어 (Keyword)</label>
+                    <input type="text" name="keyword" class="form-control"
+                           th:value="${search.keyword}" placeholder="Search... (검색어 입력)"/>
+                </div>
+                <div class="search-item search-actions">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a th:href="@{/board/list.do}" class="btn btn-secondary">Clear</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Action bar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <p style="font-size:14px;color:var(--muted);">
+                Total <strong style="color:var(--primary);" th:text="${totalCount}">0</strong> posts
+            </p>
+        </div>
+
+        <!-- Board table -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th style="width:60px;text-align:center;">No</th>
+                    <th>Title (제목)</th>
+                    <th>Status</th>
+                    <th>Date (날짜)</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="board, stat : ${boards}">
+                    <td style="text-align:center;color:var(--muted);font-size:12px;"
+                        th:text="${totalCount - search.offset - stat.index}">1</td>
+                    <td>
+                        <a th:href="@{/board/detail.do(boardSn=${board.boardSn})}"
+                           th:text="${board.boardTitle}"
+                           style="color:var(--ink);text-decoration:none;font-weight:500;">Title</a>
+                    </td>
+                    <td>
+                        <span th:if="${board.useYn == 'Y'}" class="badge badge-active">활성 (Active)</span>
+                        <span th:unless="${board.useYn == 'Y'}" class="badge badge-inactive">비활성 (Inactive)</span>
+                    </td>
+                    <td style="color:var(--muted);font-size:13px;white-space:nowrap;"
+                        th:text="${#temporals.format(board.dataRegDt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</td>
+                    <td style="white-space:nowrap;">
+                        <button class="btn btn-sm btn-secondary"
+                                th:onclick="|location.href='@{/board/detail.do(boardSn=${board.boardSn})}'|">View</button>
+                        <button class="btn btn-sm btn-danger"
+                                th:onclick="'deleteBoard(' + ${board.boardSn} + ')'">Delete</button>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(boards)}">
+                    <td colspan="5" class="text-center" style="padding:40px;color:var(--muted);">
+                        No posts found (게시글이 없습니다)
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" th:if="${totalPages > 0}">
+            <a th:href="@{/board/list.do(currentPage=${search.currentPage - 1}, keyword=${search.keyword}, searchType=${search.searchType})}"
+               class="btn btn-sm btn-secondary"
+               th:classappend="${search.currentPage <= 1} ? ' disabled'">&#8592; Prev</a>
+
+            <a th:each="i : ${#numbers.sequence(1, totalPages)}"
+               th:href="@{/board/list.do(currentPage=${i}, keyword=${search.keyword}, searchType=${search.searchType})}"
+               th:text="${i}"
+               class="btn btn-sm btn-secondary"
+               th:classappend="${i == search.currentPage} ? ' btn-primary'"></a>
+
+            <a th:href="@{/board/list.do(currentPage=${search.currentPage + 1}, keyword=${search.keyword}, searchType=${search.searchType})}"
+               class="btn btn-sm btn-secondary"
+               th:classappend="${search.currentPage >= totalPages} ? ' disabled'">Next &#8594;</a>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<!-- Hidden form for soft-delete -->
+<form id="deleteForm" method="post" th:action="@{/board/delete.do}">
+    <input type="hidden" id="deleteBoardSn" name="boardSn" value=""/>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    function deleteBoard(boardSn) {
+        if (!confirm('Delete this post? (삭제하시겠습니까?)')) return;
+        $('#deleteBoardSn').val(boardSn);
+        $('#deleteForm').submit();
+    }
+</script>
+</body>
+</html>

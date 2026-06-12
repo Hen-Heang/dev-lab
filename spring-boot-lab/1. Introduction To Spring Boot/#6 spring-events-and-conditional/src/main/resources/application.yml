@@ -1,0 +1,22 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: spring-events-and-conditional
+
+# ====================================================
+# PAYMENT GATEWAY — @ConditionalOnProperty demo
+# ====================================================
+# Change this value and restart to switch the active PaymentGateway bean:
+#   mock   → MockGateway activates   (safe for development, no real charges)
+#   stripe → StripeGateway activates (production gateway)
+#
+# If you comment this out entirely → MockGateway activates (matchIfMissing = true)
+app:
+  payment:
+    gateway: mock
+
+logging:
+  level:
+    com.learn: DEBUG

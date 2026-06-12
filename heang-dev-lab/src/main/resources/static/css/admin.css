@@ -1,0 +1,12 @@
+/*
+ * admin.css — Legacy compatibility shim
+ * All styles have been split into modular files.
+ * Use these three files directly instead:
+ *
+ *   <link rel="stylesheet" th:href="@{/css/base.css}">
+ *   <link rel="stylesheet" th:href="@{/css/layout.css}">
+ *   <link rel="stylesheet" th:href="@{/css/components.css}">
+ */
+@import url("base.css");
+@import url("layout.css");
+@import url("components.css");

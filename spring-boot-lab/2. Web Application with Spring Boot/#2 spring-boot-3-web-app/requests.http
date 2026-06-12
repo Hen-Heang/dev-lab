@@ -1,0 +1,47 @@
+### Todo CRUD — spring-boot-3-web-app (Spring MVC)
+# Run the app, then click ▶ next to each request.
+# Demonstrates the full MVC flow: Controller -> Service -> Repository.
+
+@host = http://localhost:8080
+
+### Create a todo (POST and PUT both map to createOrUpdate)
+# Returns 201 Created with a Location header pointing at the new todo.
+POST {{host}}/api/todos
+Content-Type: application/json
+
+{
+  "title": "Learn Spring MVC",
+  "description": "Understand the DispatcherServlet request flow"
+}
+
+### Get all todos
+GET {{host}}/api/todos
+
+### Get one todo by id
+GET {{host}}/api/todos/1
+
+### Mark a todo completed (PATCH)
+PATCH {{host}}/api/todos/1
+
+### Update via PUT (same handler as POST — include the id)
+PUT {{host}}/api/todos
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Learn Spring MVC (updated)",
+  "description": "ResponseEntity + status codes"
+}
+
+### Delete by id (path variable)
+DELETE {{host}}/api/todos/1
+
+### Delete by body
+DELETE {{host}}/api/todos
+Content-Type: application/json
+
+{
+  "id": 2,
+  "title": "to delete",
+  "description": "..."
+}

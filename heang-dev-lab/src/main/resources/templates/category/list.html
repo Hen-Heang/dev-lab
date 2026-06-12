@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - Store Admin'">Category Management - Store Admin</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body class="sidebar-layout">
+
+<!-- ── Sidebar ── -->
+<aside th:replace="~{fragments/sidebar :: sidebar('category')}"></aside>
+
+<!-- ── Main Content ── -->
+<div class="main-content">
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">
+                Home <span>›</span> <strong th:text="${pageTitle}">Category Management</strong>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <a th:href="@{/swagger-ui.html}" class="topbar-btn" title="API Docs">🔌</a>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1 th:text="${pageTitle}">Category Management</h1>
+                <p>Create and organize categories for your catalog.</p>
+            </div>
+            <button type="button" id="btnAdd" class="btn btn-primary">+ Add Category</button>
+        </div>
+
+        <!-- Category List Table — tbody is populated via AJAX (category.js) -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Category Name</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="categoryTableBody">
+                <tr>
+                    <td colspan="4" class="text-center">Loading data...</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<!-- Category Create/Edit Modal -->
+<div id="categoryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Add Category</h3>
+            <button type="button" class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="categoryForm">
+            <input type="hidden" id="categoryId">
+            <div class="form-group">
+                <label for="categoryName">Category Name <span class="required">*</span></label>
+                <input type="text" id="categoryName" name="name" class="form-control"
+                       placeholder="Enter category name" required>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script th:src="@{/js/category.js}"></script>
+</body>
+</html>

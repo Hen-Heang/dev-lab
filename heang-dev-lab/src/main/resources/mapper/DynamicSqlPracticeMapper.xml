@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heang.springmybatistest.mapper.DynamicSqlPracticeMapper">
+
+    <!-- ============================================================
+         REUSABLE SQL FRAGMENTS - <sql> and <include>
+         Use these to avoid repeating common column lists
+         ============================================================ -->
+    <sql id="baseColumns">
+        id, username, email, status, created_at
+    </sql>
+
+    <sql id="tableWithAlias">
+        users u
+    </sql>
+
+    <!-- Result Map (reuse from UserMapper or define here) -->
+    <resultMap id="UserResultMap" type="com.heang.springmybatistest.model.Users">
+        <id     property="id"        column="id"/>
+        <result property="username"  column="username"/>
+        <result property="email"     column="email"/>
+        <result property="status"    column="status"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+
+    <!-- ============================================================
+         PRACTICE 1: <if> tag - Conditional WHERE clauses
+
+         The <if> tag includes SQL only when the condition is true.
+         Combined with <where>, it handles AND/OR prefixes automatically.
+         ============================================================ -->
+    <select id="searchUsersWithIf" parameterType="com.heang.springmybatistest.dto.UserSearchRequest"
+            resultMap="UserResultMap">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        <!--
+            <where> tag:
+            - Only adds WHERE if at least one condition is true
+            - Automatically removes leading AND/OR
+        -->
+        <where>
+            <!-- Simple null check -->
+            <if test="username != null and username != ''">
+                AND username = #{username}
+            </if>
+
+            <!-- Email filter -->
+            <if test="email != null and email != ''">
+                AND email = #{email}
+            </if>
+
+            <!-- Status filter -->
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+
+            <!-- Date range filter -->
+            <if test="startDate != null">
+                AND created_at &gt;= #{startDate}
+            </if>
+
+            <if test="endDate != null">
+                AND created_at &lt;= #{endDate}
+            </if>
+
+            <!-- LIKE search with a keyword -->
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    username LIKE CONCAT('%', #{keyword}, '%')
+                    OR email LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
+
+    <!-- ============================================================
+         PRACTICE 2: <choose><when><otherwise> - Switch-like Logic
+
+         Similar to Java's switch statement:
+         - Evaluates <when> conditions.html in order
+         - Uses <otherwise> as default
+         Only ONE branch executes!
+         ============================================================ -->
+    <select id="searchUsersWithChoose" parameterType="com.heang.springmybatistest.dto.UserSearchRequest"
+            resultMap="UserResultMap">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        <!--
+            Dynamic ORDER BY using <choose>
+            Only one sorting option is applied
+        -->
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'username'">
+                username
+            </when>
+            <when test="sortBy == 'email'">
+                email
+            </when>
+            <when test="sortBy == 'createdAt'">
+                created_at
+            </when>
+            <otherwise>
+                id
+            </otherwise>
+        </choose>
+        <!-- Dynamic sort direction -->
+        <choose>
+            <when test="sortOrder == 'ASC'">
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <!-- ============================================================
+         PRACTICE 3: <foreach> - Iterating Collections
+
+         Use <foreach> to:
+         - Build IN clauses
+         - Batch INSERT/UPDATE/DELETE
+         - Generate multiple conditions.html
+
+         Key attributes:
+         - collection: the list/array parameter name
+         - item: variable name for current element
+         - index: current index (optional)
+         - open/close: wrapper characters
+         - separator: between elements
+         ============================================================ -->
+
+    <!-- Find users by list of IDs (IN clause) -->
+    <select id="findUsersByIds" resultMap="UserResultMap">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        WHERE id IN
+        <!--
+            Creates: WHERE id IN (1, 2, 3, 4, 5)
+        -->
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- Find users by multiple statuses -->
+    <select id="findUsersByStatuses" resultMap="UserResultMap">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        WHERE status IN
+        <foreach collection="statuses" item="status" open="(" close=")" separator=",">
+            #{status}
+        </foreach>
+        ORDER BY id DESC
+    </select>
+
+    <!-- Batch INSERT - Insert multiple users at once -->
+    <insert id="batchInsertUsers">
+        INSERT INTO users (username, email, status)
+        VALUES
+        <!--
+            Creates:
+            INSERT INTO users (username, email, status)
+            VALUES ('user1', 'email1', 'ACTIVE'),
+                   ('user2', 'email2', 'ACTIVE'),
+                   ('user3', 'email3', 'INACTIVE')
+        -->
+        <foreach collection="users" item="user" separator=",">
+            (
+                #{user.username},
+                #{user.email},
+                COALESCE(#{user.status}, 'ACTIVE')
+            )
+        </foreach>
+    </insert>
+
+    <!-- Batch UPDATE - Update status for multiple users -->
+    <update id="batchUpdateStatus">
+        UPDATE users
+        SET status = #{status}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- Batch DELETE - Delete multiple users -->
+    <delete id="batchDeleteUsers">
+        DELETE FROM users
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <!-- ============================================================
+         PRACTICE 4: <set> - Dynamic UPDATE
+
+         The <set> tag:
+         - Automatically adds SET keyword
+         - Removes trailing commas
+         - Only includes non-null fields
+         ============================================================ -->
+    <update id="dynamicUpdate">
+        UPDATE users
+        <!--
+            <set> tag handles trailing commas automatically
+            Only non-null fields will be updated
+        -->
+        <set>
+            <if test="req.username != null and req.username != ''">
+                username = #{req.username},
+            </if>
+            <if test="req.email != null and req.email != ''">
+                email = #{req.email},
+            </if>
+            <if test="req.status != null and req.status != ''">
+                status = #{req.status},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+    <!-- ============================================================
+         PRACTICE 5: <trim> - Custom Prefix/Suffix Handling
+
+         <trim> is more flexible than <where> and <set>
+         - prefix: what to add at the beginning
+         - prefixOverrides: what to remove from beginning
+         - suffix: what to add at the end
+         - suffixOverrides: what to remove from end
+         ============================================================ -->
+    <select id="searchUsersWithTrim" parameterType="com.heang.springmybatistest.dto.UserSearchRequest"
+            resultMap="UserResultMap">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        <!--
+            This <trim> behaves exactly like <where>
+            - Adds "WHERE" prefix if there's content
+            - Removes leading "AND" or "OR"
+        -->
+        <trim prefix="WHERE" prefixOverrides="AND |OR ">
+            <if test="username != null and username != ''">
+                AND username = #{username}
+            </if>
+            <if test="email != null and email != ''">
+                AND email = #{email}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </trim>
+        ORDER BY id DESC
+    </select>
+
+
+    <!-- ============================================================
+         PRACTICE 6: <sql><include> - Reusable SQL Fragments
+         ============================================================ -->
+    <select id="findAllWithSqlFragment" resultMap="UserResultMap">
+        <!-- Using <include> to reference <sql> fragments defined above -->
+        SELECT
+            <include refid="baseColumns"/>
+        FROM
+            <include refid="tableWithAlias"/>
+        ORDER BY u.id DESC
+    </select>
+
+
+    <!-- ============================================================
+         PRACTICE 7: ADVANCED SEARCH - Combining Everything!
+
+         This demonstrates a real-world search with:
+         - Multiple optional filters (<if>)
+         - Smart WHERE handling (<where>)
+         - Collection filters (<foreach>)
+         - Dynamic sorting (<choose>)
+         - Pagination (LIMIT/OFFSET)
+         ============================================================ -->
+    <select id="advancedSearch" parameterType="com.heang.springmybatistest.dto.UserSearchRequest"
+            resultMap="UserResultMap">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        <where>
+            <!-- Text filters -->
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="email != null and email != ''">
+                AND email LIKE CONCAT('%', #{email}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+
+            <!-- Keyword search across multiple fields -->
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    username LIKE CONCAT('%', #{keyword}, '%')
+                    OR email LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+
+            <!-- Date range -->
+            <if test="startDate != null">
+                AND DATE(created_at) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND DATE(created_at) &lt;= #{endDate}
+            </if>
+
+            <!-- Multiple IDs filter -->
+            <if test="ids != null and ids.size() > 0">
+                AND id IN
+                <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+
+            <!-- Multiple statuses filter -->
+            <if test="statuses != null and statuses.size() > 0">
+                AND status IN
+                <foreach collection="statuses" item="st" open="(" close=")" separator=",">
+                    #{st}
+                </foreach>
+            </if>
+        </where>
+
+        <!-- Dynamic ORDER BY -->
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'username'">username</when>
+            <when test="sortBy == 'email'">email</when>
+            <when test="sortBy == 'status'">status</when>
+            <when test="sortBy == 'createdAt'">created_at</when>
+            <otherwise>id</otherwise>
+        </choose>
+        <choose>
+            <when test="sortOrder == 'ASC'">ASC</when>
+            <otherwise>DESC</otherwise>
+        </choose>
+
+        <!-- Pagination -->
+        <if test="size != null and page != null">
+            LIMIT #{size} OFFSET #{offset}
+        </if>
+    </select>
+
+    <!-- Count query for pagination -->
+    <select id="countAdvancedSearch" parameterType="com.heang.springmybatistest.dto.UserSearchRequest"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM users
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="email != null and email != ''">
+                AND email LIKE CONCAT('%', #{email}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    username LIKE CONCAT('%', #{keyword}, '%')
+                    OR email LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="startDate != null">
+                AND DATE(created_at) &gt;= #{startDate}
+            </if>
+            <if test="endDate != null">
+                AND DATE(created_at) &lt;= #{endDate}
+            </if>
+            <if test="ids != null and ids.size() > 0">
+                AND id IN
+                <foreach collection="ids" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="statuses != null and statuses.size() > 0">
+                AND status IN
+                <foreach collection="statuses" item="st" open="(" close=")" separator=",">
+                    #{st}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+
+    <!-- ============================================================
+         PRACTICE 8: LIKE Search with <bind>
+
+         <bind> creates a variable that can be reused
+         Useful for LIKE patterns
+         ============================================================ -->
+    <select id="searchByKeyword" resultMap="UserResultMap">
+        <!--
+            <bind> creates a new variable from an OGNL expression
+            This is useful for creating LIKE patterns
+        -->
+        <bind name="pattern" value="'%' + keyword + '%'"/>
+
+        SELECT
+            <include refid="baseColumns"/>
+        FROM users
+        WHERE
+            username LIKE #{pattern}
+            OR email LIKE #{pattern}
+        ORDER BY id DESC
+    </select>
+
+</mapper>

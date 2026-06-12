@@ -1,0 +1,61 @@
+### JWT Auth flow — spring-security-jwt-authorization
+# Run these IN ORDER:
+#   1. Register a user
+#   2. Login -> the access_token is captured automatically into {{token}}
+#   3. Call the protected endpoints using that token
+#
+# The login URL is /authorization (configured by jwt.url in application.yml),
+# handled by JwtAuthenticationFilter, NOT a @Controller method.
+
+@host = http://localhost:8080
+
+### 1. Register a normal USER (public endpoint)
+POST {{host}}/api/v1/public/accounts/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123",
+  "email": "alice@example.com",
+  "full_name": "Alice Example",
+  "roles": ["USER"]
+}
+
+### 1b. Register an ADMIN (to test the admin-only endpoint)
+POST {{host}}/api/v1/public/accounts/register
+Content-Type: application/json
+
+{
+  "username": "boss",
+  "password": "password123",
+  "email": "boss@example.com",
+  "full_name": "The Boss",
+  "roles": ["ADMIN"]
+}
+
+### 2. Login -> capture the access_token into the {{token}} variable
+# After this runs, {{token}} is reused by the requests below.
+POST {{host}}/authorization
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("token", response.body.access_token);
+    client.log("Captured access_token: " + response.body.access_token);
+%}
+
+### 3. Call a USER endpoint (needs USER or ADMIN authority)
+GET {{host}}/api/v1/user/accounts
+Authorization: Bearer {{token}}
+
+### 4. Call the ADMIN endpoint with alice's token -> expect 403 Forbidden
+# (alice is only a USER). Log in as "boss" above to get through.
+GET {{host}}/api/v1/admin/accounts
+Authorization: Bearer {{token}}
+
+### 5. Call a protected endpoint with NO token -> expect 401 Unauthorized
+GET {{host}}/api/v1/user/accounts

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>User Management - Store Admin</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}"/>
+    <link rel="stylesheet" th:href="@{/css/layout.css}"/>
+    <link rel="stylesheet" th:href="@{/css/components.css}"/>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body class="sidebar-layout">
+
+<!-- ── Sidebar ── -->
+<aside th:replace="~{fragments/sidebar :: sidebar('users')}"></aside>
+
+<!-- ── Main Content ── -->
+<div class="main-content">
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">Home <span>›</span> <strong>User Management</strong></div>
+        </div>
+        <div class="topbar-right">
+            <a th:href="@{/swagger-ui.html}" class="topbar-btn" title="API Docs">🔌</a>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1>User Management <span style="font-size:14px;color:var(--muted);font-weight:400;">(사용자 관리)</span></h1>
+                <p>Create and manage user accounts.</p>
+            </div>
+            <a th:href="@{/user-list}" class="btn btn-primary">View All Users</a>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="card" style="margin-bottom:24px;">
+            <div style="padding:20px 22px;border-bottom:1px solid var(--line);">
+                <h2 style="font-size:16px;font-weight:700;">New User Information <span style="font-size:13px;color:var(--muted);font-weight:400;">(새 사용자 정보)</span></h2>
+            </div>
+            <div style="padding:22px;">
+                <form id="createUserForm">
+                    <div class="form-group">
+                        <label for="username">Username *</label>
+                        <input type="text" id="username" name="username" class="form-control"
+                               required maxlength="100" placeholder="Enter username"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" class="form-control"
+                               required maxlength="150" placeholder="Enter email"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" class="form-control"
+                               maxlength="100" placeholder="Enter full name"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" class="form-control"
+                               maxlength="20" placeholder="Enter phone number"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" name="password" class="form-control"
+                               required minlength="8" maxlength="255" placeholder="Enter password"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="">-- Select Status --</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="INACTIVE">Inactive</option>
+                            <option value="PENDING">Pending</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Create User</button>
+                </form>
+            </div>
+        </div>
+
+        <h2 style="font-size:16px;font-weight:700;margin-bottom:14px;">
+            Recent Users <span style="font-size:13px;color:var(--muted);font-weight:400;">(최근 사용자)</span>
+        </h2>
+        <div class="table-container" id="usersTableContainer">
+            <div class="text-center" style="padding:24px;color:var(--muted);">Loading users...</div>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<!-- Success Modal -->
+<div id="successModal" class="modal" onclick="if(event.target===this)closeSuccessModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>User Created Successfully!</h2>
+            <button type="button" class="close-btn" onclick="closeSuccessModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="user-detail">
+                <div class="user-detail-row">
+                    <span class="user-detail-label">Username:</span>
+                    <span class="user-detail-value" id="modalUsername"></span>
+                </div>
+                <div class="user-detail-row">
+                    <span class="user-detail-label">Email:</span>
+                    <span class="user-detail-value" id="modalEmail"></span>
+                </div>
+                <div class="user-detail-row">
+                    <span class="user-detail-label">Status:</span>
+                    <span class="user-detail-value" id="modalStatus"></span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeSuccessModal()">Close</button>
+            <button class="btn btn-success" onclick="createAnother()">Create Another</button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/user-api.js}"></script>
+<script>
+    $(document).ready(function () {
+        loadUsers();
+        $('#createUserForm').on('submit', function (e) {
+            e.preventDefault();
+            createUser();
+        });
+    });
+
+    function createUser() {
+        const userData = {
+            username: $('#username').val(),
+            email: $('#email').val(),
+            name: $('#name').val() || null,
+            phone: $('#phone').val() || null,
+            password: $('#password').val(),
+            status: $('#status').val() || null
+        };
+        UserAPI.create(userData,
+            function (result) {
+                showSuccessModal(userData);
+                $('#createUserForm')[0].reset();
+                loadUsers();
+            },
+            function (xhr) {
+                let errorMsg = 'Failed to create user';
+                if (xhr.responseJSON && xhr.responseJSON.resultMsg) errorMsg = xhr.responseJSON.resultMsg;
+                UIHelper.showMessage('message', errorMsg, false);
+            }
+        );
+    }
+
+    function showSuccessModal(userData) {
+        $('#modalUsername').text(userData.username);
+        $('#modalEmail').text(userData.email);
+        $('#modalStatus').text(userData.status || 'Not specified');
+        $('#successModal').addClass('show');
+    }
+
+    function closeSuccessModal() { $('#successModal').removeClass('show'); }
+    function createAnother() { closeSuccessModal(); $('#username').focus(); }
+
+    function loadUsers() {
+        UserAPI.getAll(
+            function (result) {
+                renderUsersTable(result.data && result.data.length > 0 ? result.data : []);
+            },
+            function () {
+                $('#usersTableContainer').html('<p style="padding:24px;color:var(--muted);">Error loading users.</p>');
+            }
+        );
+    }
+
+    function renderUsersTable(users) {
+        const $container = $('#usersTableContainer');
+        let html = '<table class="table"><thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Status</th></tr></thead><tbody>';
+        if (!users || users.length === 0) {
+            html += '<tr><td colspan="4" class="text-center">No Data (데이터가 없습니다)</td></tr>';
+        } else {
+            $.each(users, function (index, user) {
+                html += '<tr>';
+                html += '<td style="color:var(--muted);font-size:12px;">#' + user.id + '</td>';
+                html += '<td style="font-weight:500;">' + UIHelper.escapeHtml(user.username) + '</td>';
+                html += '<td>' + UIHelper.escapeHtml(user.email) + '</td>';
+                html += '<td>' + UIHelper.getStatusBadge(user.status) + '</td>';
+                html += '</tr>';
+            });
+        }
+        html += '</tbody></table>';
+        $container.html(html);
+    }
+</script>
+</body>
+</html>

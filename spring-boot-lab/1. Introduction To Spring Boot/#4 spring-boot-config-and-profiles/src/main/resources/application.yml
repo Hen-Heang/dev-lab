@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: spring-boot-config-and-profiles
+  # Change this to "prod" to activate the prod profile and EmailNotificationService
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+
+# ====================================================
+# @ConfigurationProperties(prefix = "app") binding
+# All "app.*" properties are mapped to AppProperties.java
+# ====================================================
+app:
+  name: MyApp
+  version: 1.0.0
+  max-upload-size-mb: 10  # maps to maxUploadSizeMb (kebab-case auto-converted)
+  email:
+    host: smtp.default.com
+    port: 587
+    username: default@app.com
+    ssl: false

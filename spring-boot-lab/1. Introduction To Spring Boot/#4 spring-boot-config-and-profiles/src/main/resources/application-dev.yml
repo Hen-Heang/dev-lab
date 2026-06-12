@@ -1,0 +1,18 @@
+# ====================================================
+# DEV PROFILE — active when spring.profiles.active=dev
+# Overrides values from application.yml
+# ====================================================
+app:
+  name: MyApp (Development)
+  email:
+    host: localhost
+    port: 1025        # MailHog local SMTP
+    username: dev@localhost
+    ssl: false
+
+logging:
+  level:
+    com.rean: DEBUG
+
+server:
+  port: 8080

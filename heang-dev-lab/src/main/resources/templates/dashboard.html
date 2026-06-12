@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Store Admin</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body class="sidebar-layout">
+
+<!-- ── Sidebar ── -->
+<aside th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></aside>
+
+<!-- ── Main Content ── -->
+<div class="main-content">
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-breadcrumb">
+                홈 (Home) <span>›</span> <strong>대시보드 (Dashboard)</strong>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <a th:href="@{/swagger-ui.html}" class="topbar-btn" title="API Docs">🔌</a>
+            <div class="avatar">A</div>
+        </div>
+    </header>
+
+    <div class="page-content">
+
+        <div class="page-header">
+            <h1>안녕하세요 👋 <small style="font-size:16px;font-weight:400;color:var(--muted);">Good morning</small></h1>
+            <p>오늘 스토어 현황입니다. (Here's what's happening in your store today.)</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">👥</div>
+                <div class="stat-body">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value loading-pulse" id="userCount">—</div>
+                    <div class="stat-sub">Registered accounts</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple">📦</div>
+                <div class="stat-body">
+                    <div class="stat-label">Products</div>
+                    <div class="stat-value loading-pulse" id="productCount">—</div>
+                    <div class="stat-sub">In catalog</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">📁</div>
+                <div class="stat-body">
+                    <div class="stat-label">Categories</div>
+                    <div class="stat-value loading-pulse" id="categoryCount">—</div>
+                    <div class="stat-sub">Product groups</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange">📝</div>
+                <div class="stat-body">
+                    <div class="stat-label">Board Posts</div>
+                    <div class="stat-value loading-pulse" id="boardCount">—</div>
+                    <div class="stat-sub">Published entries</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">🏢</div>
+                <div class="stat-body">
+                    <div class="stat-label">참여 기업</div>
+                    <div class="stat-value loading-pulse" id="companyCount">—</div>
+                    <div class="stat-sub">신청 접수된 기업</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="section-title">빠른 접근 (Quick Access)</div>
+        <div class="quick-grid">
+            <a th:href="@{/store/product}" class="quick-card c-purple">
+                <div class="quick-card-icon">📦</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">Products</div>
+                    <div class="quick-card-desc">Add, edit or remove products</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+            <a th:href="@{/store/category}" class="quick-card c-green">
+                <div class="quick-card-icon">📁</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">Categories</div>
+                    <div class="quick-card-desc">Organize product categories</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+            <a th:href="@{/}" class="quick-card c-blue">
+                <div class="quick-card-icon">👥</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">Users</div>
+                    <div class="quick-card-desc">Manage user accounts</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+            <a th:href="@{/board/list.do}" class="quick-card c-orange">
+                <div class="quick-card-icon">📝</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">Board</div>
+                    <div class="quick-card-desc">Korean MVC .do style board</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+            <a th:href="@{/learn}" class="quick-card c-teal">
+                <div class="quick-card-icon">📚</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">Thymeleaf Lab</div>
+                    <div class="quick-card-desc">Learning exercises &amp; practice</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+            <a th:href="@{/company/list}" class="quick-card c-blue">
+                <div class="quick-card-icon">🏢</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">기업 관리</div>
+                    <div class="quick-card-desc">신청 접수내역 · 기업 신규등록</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+            <a th:href="@{/faq/list.do}" class="quick-card c-teal">
+                <div class="quick-card-icon">❓</div>
+                <div class="quick-card-body">
+                    <div class="quick-card-title">자주하는 질문 (FAQ)</div>
+                    <div class="quick-card-desc">FAQ 등록 · 수정 · 삭제</div>
+                </div>
+                <span class="quick-card-arrow">›</span>
+            </a>
+        </div>
+
+    </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<script>
+    function setCount(id, data) {
+        const el = document.getElementById(id);
+        const list = Array.isArray(data)
+            ? data
+            : (data && Array.isArray(data.users)) ? data.users : [];
+        el.classList.remove('loading-pulse');
+        el.textContent = list.length;
+    }
+
+    fetch('/api/categories')
+        .then(r => r.json())
+        .then(res => setCount('categoryCount', res.data || res))
+        .catch(() => {
+            document.getElementById('categoryCount').textContent = '0';
+            document.getElementById('categoryCount').classList.remove('loading-pulse');
+        });
+
+    fetch('/api/products')
+        .then(r => r.json())
+        .then(res => setCount('productCount', res.data || res))
+        .catch(() => {
+            document.getElementById('productCount').textContent = '0';
+            document.getElementById('productCount').classList.remove('loading-pulse');
+        });
+
+    fetch('/users')
+        .then(r => r.json())
+        .then(res => setCount('userCount', res.data || res))
+        .catch(() => {
+            document.getElementById('userCount').textContent = '0';
+            document.getElementById('userCount').classList.remove('loading-pulse');
+        });
+
+    fetch('/api/board')
+        .then(r => r.json())
+        .then(res => setCount('boardCount', res.data || res))
+        .catch(() => {
+            document.getElementById('boardCount').textContent = '0';
+            document.getElementById('boardCount').classList.remove('loading-pulse');
+        });
+
+    fetch('/company/count')
+        .then(r => r.json())
+        .then(res => {
+            const el = document.getElementById('companyCount');
+            el.classList.remove('loading-pulse');
+            el.textContent = res.data ?? res.count ?? 0;
+        })
+        .catch(() => {
+            document.getElementById('companyCount').textContent = '0';
+            document.getElementById('companyCount').classList.remove('loading-pulse');
+        });
+</script>
+</body>
+</html>

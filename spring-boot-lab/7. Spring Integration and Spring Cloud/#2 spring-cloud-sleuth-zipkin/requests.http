@@ -1,0 +1,42 @@
+### Course CRUD — spring-cloud-sleuth-zipkin (distributed tracing)
+# After running a request, check the app logs for a traceId, and open
+# Zipkin at http://localhost:9411 to see the request timeline.
+# Note: the controller is mapped at BOTH /courses and /api/courses.
+
+@host = http://localhost:8080
+
+### Create a course (note the JSON field names from @JsonProperty)
+POST {{host}}/courses
+Content-Type: application/json
+
+{
+  "name": "Spring Boot Mastery",
+  "c_desc": "From basics to microservices",
+  "price": 49.99
+}
+
+### Get all courses
+GET {{host}}/courses
+
+### Get one course by id
+GET {{host}}/courses/1
+
+### Update a course
+PUT {{host}}/courses/1
+Content-Type: application/json
+
+{
+  "name": "Spring Boot Mastery (2026)",
+  "c_desc": "Updated for Spring Boot 3.3",
+  "price": 59.99
+}
+
+### Paginated list
+GET {{host}}/courses/pagination?page=0&size=5
+
+### Delete a course
+DELETE {{host}}/courses/1
+
+### --- Observability ---
+### Health (Actuator)
+GET {{host}}/actuator/health

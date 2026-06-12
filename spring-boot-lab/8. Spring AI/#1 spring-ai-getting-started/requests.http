@@ -1,0 +1,21 @@
+### Spring AI — spring-ai-getting-started
+# Requires a valid model API key (e.g. OPENAI_API_KEY) set as an env var
+# before starting the app. Calls may cost money — check your provider's tier.
+
+@host = http://localhost:8080
+
+### Simple chat
+GET {{host}}/api/chat?message=What is Spring Boot in one sentence?
+
+### Chat with a system persona (expert mode)
+GET {{host}}/api/chat/expert?topic=dependency injection
+
+### Streaming chat (Server-Sent Events) — tokens arrive incrementally
+GET {{host}}/api/chat/stream?message=Explain reactive programming briefly
+Accept: text/event-stream
+
+### Prompt controller — recipe example
+GET {{host}}/api/prompt/recipe
+
+### Prompt controller — review example
+GET {{host}}/api/prompt/review

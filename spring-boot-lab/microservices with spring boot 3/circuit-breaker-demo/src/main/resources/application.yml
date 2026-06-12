@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: circuit-breaker-demo
+
+server:
+  port: 8080
+
+# Expose Resilience4j actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers,circuitbreakerevents,retries,retryevents,ratelimiters
+  health:
+    circuitbreakers:
+      enabled: true
+
+resilience4j:
+  # Circuit Breaker config
+  circuitbreaker:
+    instances:
+      inventoryService:
+        # Percentage of failures to trip the circuit (OPEN state)
+        failure-rate-threshold: 50
+        # Minimum calls before circuit can open
+        minimum-number-of-calls: 5
+        # How long to stay OPEN before trying again (HALF-OPEN)
+        wait-duration-in-open-state: 10s
+        # How many calls to allow in HALF-OPEN state
+        permitted-number-of-calls-in-half-open-state: 3
+        # Sliding window type: COUNT_BASED or TIME_BASED
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        register-health-indicator: true
+
+  # Retry config
+  retry:
+    instances:
+      inventoryService:
+        max-attempts: 3
+        wait-duration: 500ms
+        # Only retry on these exceptions
+        retry-exceptions:
+          - java.lang.RuntimeException
+
+  # Rate Limiter config
+  ratelimiter:
+    instances:
+      inventoryService:
+        limit-for-period: 5          # 5 calls per period
+        limit-refresh-period: 1s     # period = 1 second
+        timeout-duration: 0          # fail immediately if limit exceeded

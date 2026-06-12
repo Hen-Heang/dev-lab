@@ -1,0 +1,11 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: spring-aop-basics
+
+logging:
+  level:
+    com.learn: DEBUG
+    org.springframework.aop: DEBUG

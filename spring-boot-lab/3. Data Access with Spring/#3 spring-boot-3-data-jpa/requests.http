@@ -1,0 +1,40 @@
+### Todo CRUD — spring-boot-3-data-jpa (JPA + global exception handling)
+# Same API surface as the MVC project, but now backed by JPA + a database,
+# with a @ControllerAdvice that turns errors into clean JSON.
+
+@host = http://localhost:8080
+
+### Create a todo
+POST {{host}}/api/todos
+Content-Type: application/json
+
+{
+  "title": "Learn Spring Data JPA",
+  "description": "JpaRepository gives CRUD for free"
+}
+
+### Get all todos
+GET {{host}}/api/todos
+
+### Get one by id
+GET {{host}}/api/todos/1
+
+### Trigger the global exception handler — ask for an id that doesn't exist
+# Expected: a clean ErrorMessage JSON (not a stack trace) thanks to @ControllerAdvice.
+GET {{host}}/api/todos/999999
+
+### Mark completed (PATCH)
+PATCH {{host}}/api/todos/1
+
+### Update via PUT
+PUT {{host}}/api/todos
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Learn Spring Data JPA (updated)",
+  "description": "Now persisted to the DB"
+}
+
+### Delete by id
+DELETE {{host}}/api/todos/1

@@ -1,0 +1,21 @@
+### Rate Limit demo — spring-boot-rating-limit
+# Run the app, then click the ▶ (Run) gutter icon next to a request.
+# This project limits how many calls you can make. Fire the GET below
+# repeatedly (fast) and watch it switch from 200 OK -> 429 Too Many Requests.
+#
+# Watch the response headers:
+#   X-Rate-Limit-Remaining          (on 200) tokens left in the bucket
+#   X-Rate-Limit-Retry-After-Seconds (on 429) seconds until the bucket refills
+
+@host = http://localhost:8080
+
+### Get all posts (allowed while tokens remain in the bucket)
+GET {{host}}/api/posts
+
+### Spam it — run this several times quickly to trigger the rate limit
+# Expected: 200 OK a few times (5 for GOLD), then 429 once the bucket is empty.
+GET {{host}}/api/posts
+
+### View the seeded data in the H2 console (open in a browser)
+# URL:      http://localhost:8080/h2-console
+# JDBC URL: jdbc:h2:mem:postsdb   (user: sa, no password)
