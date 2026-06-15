@@ -1,6 +1,7 @@
 package com.henheang.securityapi.controller;
 import com.henheang.commonapi.components.common.api.ApiResponse;
 import com.henheang.commonapi.components.common.api.ExitCode;
+import com.henheang.securityapi.domain.RefreshToken;
 import com.henheang.securityapi.domain.User;
 import com.henheang.securityapi.exception.AuthException;
 import com.henheang.securityapi.payload.*;
@@ -52,12 +53,17 @@ public class AuthController extends BaseController {
                     User user = refreshToken.getUser();
                     String accessToken = jwtTokenProvider.generateToken(user);
 
-                    // Calculate expiration time in seconds
-                    Duration duration = Duration.parse("PT" + jwtExpirationString.toUpperCase());
+                    // Rotate the refresh token: createRefreshToken revokes all of the
+                    // user's existing tokens (including the one just presented) and issues
+                    // a new one, so a leaked refresh token can only be used once.
+                    RefreshToken rotatedToken = refreshTokenService.createRefreshToken(user);
+
+                    // expiresIn reflects the access token lifetime
+                    Duration duration = Duration.parse(jwtExpirationString);
                     long expiresInSeconds = duration.getSeconds();
                     AuthResponse authResponse = new AuthResponse(
                             accessToken,
-                            refreshToken.getToken(),
+                            rotatedToken.getToken(),
                             expiresInSeconds
                     );
                     return ok(authResponse);

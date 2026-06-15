@@ -24,9 +24,9 @@ public class JwtConfig {
     @Bean
     public SecretKey jwtSecretKey() {
         try {
-            // Use the predefined strong secret
-            String strongSecret = "dGhpc0lzQVNlY3VyZUFuZFN0cm9uZ0p3dFNlY3JldEtleUZvckF1dGhIdWJBcHBsaWNhdGlvbjIwMjU=";
-            byte[] decodedKey = Base64.getDecoder().decode(strongSecret);
+            // Decode the externalized Base64 secret (jwt.secret). It must decode to
+            // at least 64 bytes (512 bits) to satisfy the HS512 signing algorithm.
+            byte[] decodedKey = Base64.getDecoder().decode(secret);
             return new SecretKeySpec(decodedKey, "HmacSHA512");
         } catch (Exception e) {
             throw new RuntimeException("Failed to create JWT secret key", e);

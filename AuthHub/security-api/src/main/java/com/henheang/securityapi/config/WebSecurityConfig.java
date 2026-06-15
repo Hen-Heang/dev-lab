@@ -52,7 +52,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/todo/v1/create").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
-                        .requestMatchers("/v1/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/v1/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 );
         // Remove OAuth2 configuration for now

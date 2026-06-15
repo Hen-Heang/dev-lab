@@ -18,6 +18,8 @@ import com.henheang.securityapi.service.RoleService;
 import com.henheang.securityapi.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +34,8 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
@@ -78,8 +82,8 @@ public class AuthServiceImpl implements AuthService {
             return new AuthResponse(token, refreshToken.getToken(), expirationTimeInSeconds);
 
         } catch (Exception e) {
-            throw new AuthException(ExitCode.REGISTRATION_FAILED,
-                    "Registration failed: " + e.getMessage());
+            logger.error("Registration failed for {}: {}", signUpRequest.getEmail(), e.getMessage(), e);
+            throw new AuthException(ExitCode.REGISTRATION_FAILED, "Registration failed. Please try again.");
         }
     }
 
@@ -112,8 +116,8 @@ public class AuthServiceImpl implements AuthService {
             // Create an authentication response
             return new AuthResponse(accessToken, refreshToken.getToken(), expiresInSeconds);
         } catch (AuthenticationException e) {
-            throw new AuthException(ExitCode.AUTHENTICATION_FAILED,
-                    "Authentication failed: " + e.getMessage());
+            logger.warn("Login failed for {}: {}", loginRequest.getEmail(), e.getMessage());
+            throw new AuthException(ExitCode.INVALID_CREDENTIALS, "Invalid email or password");
         }
     }
 
