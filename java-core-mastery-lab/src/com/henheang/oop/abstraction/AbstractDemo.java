@@ -1,7 +1,7 @@
 package com.henheang.oop.abstraction;
 
 public class AbstractDemo {
-    static void main(String[] args) {
+    public static void main(String[] args) {
 
         // --- Polymorphism via a parent class type ---
         // Variable type is Vehicle, but the actual object is Car.

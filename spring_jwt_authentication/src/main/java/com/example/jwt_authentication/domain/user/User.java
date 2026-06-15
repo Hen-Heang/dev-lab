@@ -16,16 +16,15 @@ import java.util.List;
 
 @Setter
 @Getter
-@Table(name = "user")
+@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     @Column(nullable = false)
-    private Integer integer;
+    private Integer id;
 
     @Column(unique = true, length = 100, nullable = false)
     private String fullName;

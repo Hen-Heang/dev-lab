@@ -484,7 +484,7 @@ public class StudentManagementSystem {
         System.out.println("--------------------------------------------------------------------------------------------");
     }
 
-    static void main() {
+    public static void main(String[] args) {
         new StudentManagementSystem().start();
     }
 }

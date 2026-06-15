@@ -5,7 +5,7 @@ import java.util.List;
 
 public class GarbageCollectionDemo {
 
-    static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException {
 	// write your code here
         Runtime runtime = Runtime.getRuntime();
         double avlMemory = runtime.freeMemory();

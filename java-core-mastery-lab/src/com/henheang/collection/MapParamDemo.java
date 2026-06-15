@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MapParamDemo {
-    static void main(String[] args) {
+    public static void main(String[] args) {
 
         // =====================================================================
         // Map<String, Object> is the most common way to pass parameters

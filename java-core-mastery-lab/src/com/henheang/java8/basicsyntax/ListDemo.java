@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class ListDemo {
 
-    static void main() {
+    public static void main(String[] args) {
 
         // --- PART 1: Basic List of department names ---
 

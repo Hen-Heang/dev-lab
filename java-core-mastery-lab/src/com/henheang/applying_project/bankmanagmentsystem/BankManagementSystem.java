@@ -955,7 +955,7 @@ public class BankManagementSystem {
     }
 
     // ========= MAIN METHOD =========
-    static void main(String[] args) {
+    public static void main(String[] args) {
         BankManagementSystem system = new BankManagementSystem();
 
         // Check for command line arguments
