@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
  */
 public class BankManagementSystem {
 
-    public static  Logger LOGGER = Logger.getLogger(BankManagementSystem.class.getName());
+    public static final   Logger LOGGER = Logger.getLogger(BankManagementSystem.class.getName());
 
     // ========= ENHANCED USER INTERFACE =========
     private final Bank bank;
