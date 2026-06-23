@@ -11,7 +11,7 @@ public class ArrayDequeDemo {
 		arrayDeque.push(100000);
 		arrayDeque.push(1000);
 		
-		// Peek to get the top item, but do not remove it.
+		// Peek to get the top item but do not remove it.
 		int peekResult = arrayDeque.peek();
 		System.out.println(peekResult);
 		

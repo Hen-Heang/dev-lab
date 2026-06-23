@@ -31,5 +31,13 @@
 
 ## Next session plan
 
-- Start Phase 1, Week 1: variables, types, String vs StringBuilder,
-  pass-by-value. Warm-up: none (first session).
+- Curriculum order changed (HEANG's choice): follow
+  `java-core-mastery-lab/Java_Main_GuideLine.md` "Basic Constructs of
+  Java Programming" numbered list (#1 Class -> #50 Design Patterns),
+  in order, instead of ROADMAP.md phase order. Treat each numbered
+  item as one /study session topic.
+- Pass-by-value exercise (session 1) is still open:
+  `dev-learning-notes/exercises/phase1-pass-by-value/TASK.md` —
+  HEANG predicted "AX" correctly (PASS) but has not written/run
+  `PassByValueDemo.java` yet.
+- Next topic per the list: #1 Class, #2 Object, #3 Constructor.
