@@ -38,13 +38,14 @@ import java.util.stream.Collectors;
  */
 public class BankManagementSystem {
 
-    public static final   Logger LOGGER = Logger.getLogger(BankManagementSystem.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(BankManagementSystem.class.getName());
 
     // ========= ENHANCED USER INTERFACE =========
     private final Bank bank;
     private final Scanner scanner;
     private String currentCustomerId;
     boolean isRunning = true;
+
     public BankManagementSystem() {
         this.scanner = new Scanner(System.in);
         this.currentCustomerId = null;
@@ -63,7 +64,7 @@ public class BankManagementSystem {
         System.out.println(ConsoleColor.cyan("=".repeat(60)));
 
 //        Set choice for Processing
-          while (isRunning)  {
+        while (isRunning) {
             try {
                 if (currentCustomerId == null) {
                     displayGuestMenu();
@@ -524,8 +525,14 @@ public class BankManagementSystem {
         int choice = getIntInput("Choose option: ");
         switch (choice) {
             case 1 -> bank.displayBankSummary();
-            case 2 -> { bank.generateMonthlyInterest(); System.out.println("Monthly interest processed."); }
-            case 3 -> { bank.chargeMaintenanceFees(); System.out.println("Maintenance fees charged."); }
+            case 2 -> {
+                bank.generateMonthlyInterest();
+                System.out.println("Monthly interest processed.");
+            }
+            case 3 -> {
+                bank.chargeMaintenanceFees();
+                System.out.println("Maintenance fees charged.");
+            }
             case 4 -> viewAllCustomers();
             case 5 -> approveLoans();
             case 6 -> freezeUnfreezeAccount();
@@ -702,13 +709,13 @@ public class BankManagementSystem {
         System.out.println(ConsoleColor.cyan("├" + line + "┤"));
 
         // %-10s = left-align label in 10 chars, %-23s = value in 23 chars
-        System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Type",    type);
-        System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Amount",  String.format("$%,.2f %s", amount, currency));
+        System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Type", type);
+        System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Amount", String.format("$%,.2f %s", amount, currency));
         System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Account", accountNumber);
 
         // green for the new balance to highlight it
         System.out.printf(ConsoleColor.cyan("│") + " %-10s : " + ConsoleColor.green("%-23s") + ConsoleColor.cyan("│%n"), "Balance", String.format("$%,.2f %s", newBalance, currency));
-        System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Time",    time);
+        System.out.printf(ConsoleColor.cyan("│") + " %-10s : %-23s" + ConsoleColor.cyan("│%n"), "Time", time);
 
         System.out.println(ConsoleColor.cyan("└" + line + "┘\n"));
     }

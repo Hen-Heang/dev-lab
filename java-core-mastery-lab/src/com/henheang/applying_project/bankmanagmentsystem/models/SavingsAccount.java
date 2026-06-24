@@ -3,12 +3,14 @@ package com.henheang.applying_project.bankmanagmentsystem.models;
 import com.henheang.applying_project.bankmanagmentsystem.enums.Currency;
 import com.henheang.applying_project.bankmanagmentsystem.enums.TransactionType;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 
 // extends Account which is already Serializable, but we declare it here for clarity
 public class SavingsAccount extends Account implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
         private static final double MINIMUM_BALANCE = 500.0;

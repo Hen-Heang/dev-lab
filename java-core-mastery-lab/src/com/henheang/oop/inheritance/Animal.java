@@ -14,7 +14,7 @@ package com.henheang.oop.inheritance;
  * <p>
  * Why use inheritance?
  *   - Avoid repeating code (DRY = Don't Repeat Yourself)
- *   - "name" and "age" are written ONCE in Animal, not copied into Dog and Cat
+ *   - "Name" and "age" are written ONCE in Animal, not copied into Dog and Cat
  *   - eat() and sleep() are written ONCE in Animal, not copied into Dog and Cat
  */
 public class Animal {

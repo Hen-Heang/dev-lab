@@ -8,21 +8,7 @@ public class RemoveDuplicates {
 	static ArrayList<String> removeDuplicates(ArrayList<String> list) {
 
 		// Store unique items in result.
-		ArrayList<String> result = new ArrayList<>();
-
-		// Record encountered Strings in HashSet.
-		HashSet<String> set = new HashSet<>();
-
-		// Loop over argument list.
-		for (String item : list) {
-
-			// If String is not in set, add it to the list and the set.
-			if (!set.contains(item)) {
-				result.add(item);
-				set.add(item);
-			}
-		}
-		return result;
+        return RemoveDuplicatePerformance.removeDuplicates(list);
 	}
 
 	public static void main(String[] args) {

@@ -2,6 +2,7 @@ package com.henheang.collection;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class RemoveDuplicatePerformance {
 
@@ -9,7 +10,7 @@ public class RemoveDuplicatePerformance {
 		// See if duplicates exist (see above example).
 		for (int i = 0; i < list.size(); i++) {
 			for (int x = i + 1; x < list.size(); x++) {
-				if (list.get(i) == list.get(x)) {
+				if (Objects.equals(list.get(i), list.get(x))) {
 					return true;
 				}
 			}
@@ -53,10 +54,7 @@ public class RemoveDuplicatePerformance {
 		for (int i = 0; i < 10000000; i++) {
 
 			ArrayList<String> copy = removeDuplicates(elements);
-			if (copy == null) {
-				System.out.println(false);
-			}
-		}
+        }
 
 		long t3 = System.currentTimeMillis();
 

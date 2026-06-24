@@ -138,7 +138,7 @@ public class BankAccountDemo {
         //
         // account.getBalance() = calls the public getter in BankAccount.java
         //                         which returns the private "balance" field safely
-        // We CANNOT do account.balance directly — that is a compile error!
+        // We CANNOT do account.balance directly — that is a compiler error!
         // ----------------------------------------------------------------------
         System.out.println("Final Balance      : " + account.getBalance());
 

@@ -1,4 +1,5 @@
 package com.henheang.oop.encapsulation;
+import java.util.Objects;
 
 /**
  * BankAccount class demonstrates ENCAPSULATION in OOP.
@@ -10,13 +11,30 @@ package com.henheang.oop.encapsulation;
  * Real-world analogy — ATM:
  *   - You cannot open the ATM and take money directly
  *   - You MUST use the buttons (methods): deposit, withdraw
- *   - The ATM checks rules before doing anything (e.g. enough balance?)
+ *   - The ATM checks rules before doing anything (e.g., enough balances?)
  * <p>
  * In Java, we achieve encapsulation by:
- *   1. Making fields "private"  → nobody outside can read/write them directly
- *   2. Providing "public" methods → controlled ways to interact with the data
+ *   1. Making fields "private" → nobody outside can read/write them directly
+ *   2. Providing "public" method → controlled ways to interact with the data
  */
 public class BankAccount {
+
+//    Handle equals and hashCode methods
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BankAccount other = (BankAccount) o;
+        return getAccountNumber().equals(other.getAccountNumber());
+    }
+
+//  Add hashCode method
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAccountNumber());
+    }
+
 
     // ==========================================================================
     // FIELDS (also called "instance variables" or "attributes")
@@ -27,7 +45,7 @@ public class BankAccount {
     // "private" keyword means:
     //   - Only code INSIDE this class (BankAccount) can use these variables
     //   - Code in OTHER classes (like BankAccountDemo) CANNOT do:
-    //       account.balance = 9999;   <-- COMPILE ERROR, not allowed!
+    //       account.balance = 9999; <-- COMPILE ERROR, not allowed!
     //   - This is the whole point of encapsulation — protect the data!
     //
     // "final" keyword means:
@@ -37,7 +55,7 @@ public class BankAccount {
     // ==========================================================================
 
     private final String owner;         // Who owns this account (e.g. "Hen Heang") — never changes
-    private double balance;             // Current money in the account — changes often
+    private double balance;             // Current money in the account changes often
     private final String accountNumber; // Unique account ID (e.g. "ACC-123456789") — never changes
 
     // ==========================================================================
@@ -48,21 +66,24 @@ public class BankAccount {
     //
     // Example:
     //   BankAccount account = new BankAccount("Hen Heang", "ACC-123456789", 1000.0);
-    //                                          ↑ owner      ↑ accountNumber   ↑ initialBalance
+    //                                          ↑ owner ↑ accountNumber ↑ initialBalance
     //
     // Java sees "new BankAccount(...)" and immediately calls this constructor.
     // The constructor's job is to SET UP the object's initial state.
     //
     // Parameters:
-    //   - String owner          → the person's name, passed in from outside
-    //   - String accountNumber  → the account ID, passed in from outside
+    //   - String owner → the person's name, passed in from outside
+    //   - String accountNumber → the account ID, passed in from outside
     //   - double initialBalance → the starting balance, passed in from outside
     // ==========================================================================
 
-    public BankAccount(String owner, String accountNumber, double initialBalance) {
+    public BankAccount(
+            String owner,
+            String accountNumber,
+            double initialBalance) {
 
         // "this.owner" = the FIELD declared above (private final String owner)
-        // "owner"      = the PARAMETER given to this constructor
+        // "owner" = the PARAMETER given to this constructor
         // We copy the parameter value INTO the field so the object remembers it.
         this.owner = owner;
 
@@ -70,7 +91,7 @@ public class BankAccount {
         this.accountNumber = accountNumber;
 
         // Store the initial balance passed in.
-        // Note: ideally we should validate this too (e.g. reject negative values),
+        // Note: ideally we should validate this too (e.g., reject negative values),
         // but for simplicity we store it directly here.
         this.balance = initialBalance;
     }
@@ -86,7 +107,7 @@ public class BankAccount {
     // if it's negative. The check should come FIRST. But this is the current code.
     //
     // "public" = any class can call this method
-    // "void"   = this method does not return any value
+    // "void" = this method does not return any value
     // ==========================================================================
 
     public void setBalance(double balance) {

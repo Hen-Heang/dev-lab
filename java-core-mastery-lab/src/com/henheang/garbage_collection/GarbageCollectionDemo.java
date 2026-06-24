@@ -10,9 +10,9 @@ public class GarbageCollectionDemo {
         Runtime runtime = Runtime.getRuntime();
         double avlMemory = runtime.freeMemory();
         System.out.println("AVL memory start app: " + avlMemory / 1024 + "k");
-        List<Person> people = new ArrayList<>();
+        List<Person> peoples = new ArrayList<>();
         for(int i =0; i <1000000; i ++){
-            people.add(new Person("TEST GC"));
+            peoples.add(new Person("TEST GC"));
         }
         avlMemory = runtime.freeMemory();
         System.out.println("AVL after crate array: " + avlMemory /1024 + "k");
