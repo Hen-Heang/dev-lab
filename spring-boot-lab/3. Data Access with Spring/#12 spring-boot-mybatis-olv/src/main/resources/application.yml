@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    # H2 in-memory, PostgreSQL-compat mode -> nextval(), TEXT, NOW() all work
+    url: jdbc:h2:mem:olv;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always          # run schema.sql then data.sql on startup
+  h2:
+    console:
+      enabled: true         # browse data at http://localhost:8080/h2-console
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    # the key learning point: board_title -> boardTitle automatically
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.learn: INFO

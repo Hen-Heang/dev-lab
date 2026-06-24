@@ -36,6 +36,7 @@
 		<spring.cloud-version>2022.0.1</spring.cloud-version>
 		<micrometer-tracing.version>1.0.3</micrometer-tracing.version>
 		<image>reancode7/${project.artifactId}:${project.version}</image>
+		<lombok.version>1.18.34</lombok.version>
 	</properties>
 
 	<dependencies>

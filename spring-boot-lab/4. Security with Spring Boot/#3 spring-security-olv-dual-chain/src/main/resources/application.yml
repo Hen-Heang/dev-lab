@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+globals:
+  security:
+    # Flip this to switch the active SecurityFilterChain:
+    #   web -> form login + session  (default)
+    #   api -> stateless + JSON 401/403
+    mode: web
+    # business-level allowlist (mirrors saas-olv globals.security.public-urls)
+    public-urls:
+      - /health/**
+
+logging:
+  level:
+    com.learn: INFO
+    org.springframework.security: INFO

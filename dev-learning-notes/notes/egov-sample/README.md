@@ -10,6 +10,12 @@ tags: [egov-sample, spring-boot, mybatis, thymeleaf, egov]
 > This is a **developer reference sample** that shows the **complete process of building one screen from start to finish**.
 > When working on real projects, copy this package and only change the domain name.
 
+> **Related study notes (from the real `saas-olv` project):**
+> - [Tech Stack & Java Concepts to Learn](./tech-stack-and-concepts.md) — full inventory of technologies, Java/Spring features, and design patterns + a practice plan
+> - [OOP in saas-olv](./oop-in-saas-olv.md) — the 4 OOP pillars shown with real project code
+> - [How Deployment Works](./deployment.md) — beginner-friendly walkthrough of the Jenkins → Kaniko → Kubernetes deploy process
+> - [More to Learn (Round 2)](./more-to-learn.md) — deeper topics: front-end AJAX, POI Excel, crypto, ULID/ID generation, interceptor lifecycle, API integration, the testing gap
+
 ---
 
 ## Project Overview

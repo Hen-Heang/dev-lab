@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace MUST equal the @Mapper interface's fully-qualified class name -->
+<mapper namespace="com.learn.board.mapper.BoardMapper">
+
+    <!--
+      resultMap is optional here because map-underscore-to-camel-case is on
+      (board_title -> boardTitle). It's kept to mirror saas-olv and to show the
+      explicit DB-column -> Java-field contract.
+    -->
+    <resultMap id="board" type="com.learn.board.service.BoardOutVO">
+        <id     property="boardSn"    column="board_sn"/>
+        <result property="boardTitle" column="board_title"/>
+        <result property="boardCn"    column="board_cn"/>
+        <result property="useYn"      column="use_yn"/>
+        <result property="dataRegId"  column="data_reg_id"/>
+        <result property="dataRegDt"  column="data_reg_dt"/>
+    </resultMap>
+
+    <!-- LIST + dynamic search + LIMIT/OFFSET paging -->
+    <select id="selectList"
+            parameterType="com.learn.board.service.BoardInVO"
+            resultMap="board">
+        SELECT board_sn, board_title, board_cn, use_yn, data_reg_id, data_reg_dt
+          FROM board
+         WHERE use_yn = 'Y'
+        <if test="searchKeyword != null and searchKeyword != ''">
+            AND board_title LIKE '%' || #{searchKeyword} || '%'
+        </if>
+         ORDER BY board_sn DESC
+         LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+    </select>
+
+    <!-- COUNT — same WHERE as selectList (no paging) -->
+    <select id="selectListTotCnt"
+            parameterType="com.learn.board.service.BoardInVO"
+            resultType="int">
+        SELECT COUNT(*)
+          FROM board
+         WHERE use_yn = 'Y'
+        <if test="searchKeyword != null and searchKeyword != ''">
+            AND board_title LIKE '%' || #{searchKeyword} || '%'
+        </if>
+    </select>
+
+    <!-- DETAIL -->
+    <select id="selectDetail"
+            parameterType="com.learn.board.service.BoardInVO"
+            resultMap="board">
+        SELECT board_sn, board_title, board_cn, use_yn, data_reg_id, data_reg_dt
+          FROM board
+         WHERE board_sn = #{boardSn}
+    </select>
+
+    <!-- INSERT — PK filled by the sequence default (nextval('seq_board')) -->
+    <insert id="insert" parameterType="com.learn.board.service.BoardInVO">
+        INSERT INTO board (board_title, board_cn, use_yn, data_reg_id)
+        VALUES (#{boardTitle}, #{boardCn}, #{useYn}, #{dataRegId})
+    </insert>
+
+    <!-- UPDATE -->
+    <update id="update" parameterType="com.learn.board.service.BoardInVO">
+        UPDATE board
+           SET board_title = #{boardTitle},
+               board_cn    = #{boardCn},
+               use_yn      = #{useYn},
+               data_chg_dt = NOW()
+         WHERE board_sn = #{boardSn}
+    </update>
+
+    <!-- DELETE -->
+    <delete id="delete" parameterType="com.learn.board.service.BoardInVO">
+        DELETE FROM board
+         WHERE board_sn = #{boardSn}
+    </delete>
+
+</mapper>
