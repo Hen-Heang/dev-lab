@@ -7,6 +7,8 @@ public class BankTransferPayment extends Payment implements Refundable {
 
     // TODO 1: Constructor — call supper, assign bankAccountNumber
     public BankTransferPayment(double amount, String description, String bankAccountNumber) {
+        super(amount, description);
+        this.bankAccountNumber = bankAccountNumber;
         // TODO 1 here
     }
 

@@ -15,19 +15,22 @@ public class CashPayment extends Payment {
     // TODO 2: Return "CASH"
     @Override
     public String getPaymentType() {
-        return null; // TODO 2
+        return "CASH";
+        // TODO 2
     }
 
     // TODO 3: Print payment line
     //   Expected: $75.00 cash received by cashier: Dara
     @Override
     protected void execute() {
+
         // TODO 3
     }
 
     // TODO 4: Cash has no fee
     @Override
     public double getFee() {
-        return 0; // TODO 4
+        return 0;
+        // TODO 4
     }
 }
