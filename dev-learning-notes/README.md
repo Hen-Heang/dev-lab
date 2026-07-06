@@ -15,8 +15,9 @@ I study here with Claude Code as a strict mentor (rules in `CLAUDE.md`).
 | ------------- | ---------- |
 | `PROGRESS.md` | My learning state: current topic, weak spots, quiz grades |
 | `curriculum/ROADMAP.md` | The full 2-year plan, phase by phase |
+| `curriculum/FOCUS.md` | My filter against scattered learning — check before starting anything new |
 | `exercises/` | My own attempts — I write code here first, then get review |
-| `notes/feynman/` | Concepts explained in my own words (Feynman method) |
+| `notes/feynman/` | Concepts explained in my own words (Feynman method) — use `TEMPLATE.md` |
 | `notes/<slug>/README.md` | Published study notes — synced to the website |
 | `guides/` | Real engineering guidelines from a production fintech workspace (mostly Korean). Index: `guides/README.md` |
 | `java/`, `springboot/`, `sql/`, `mybatis/`, `jquery/`, `jsp-jstl/` | Topic notes |

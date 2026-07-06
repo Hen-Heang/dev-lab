@@ -23,6 +23,9 @@
 
 | Date | Track | Topic | Question (short) | Grade |
 | ---- | ----- | ----- | ---------------- | ----- |
+| 2026-06-30 | AI Usage | Prompt writing — 3-part rule | Write good prompt for `substring(7)` line | PASS |
+| 2026-06-30 | AI Usage | Prompt writing — context level | Write prompt with specific level for line 49 | PASS |
+| 2026-06-30 | AI Usage | Prompt writing — iterative prompting | Write Prompt 1 + 2 for lines 54-63 | PASS (Prompt 3 skipped) |
 
 ## Mock interview history
 
@@ -31,13 +34,12 @@
 
 ## Next session plan
 
-- Curriculum order changed (HEANG's choice): follow
-  `java-core-mastery-lab/Java_Main_GuideLine.md` "Basic Constructs of
-  Java Programming" numbered list (#1 Class -> #50 Design Patterns),
-  in order, instead of ROADMAP.md phase order. Treat each numbered
-  item as one /study session topic.
-- Pass-by-value exercise (session 1) is still open:
-  `dev-learning-notes/exercises/phase1-pass-by-value/TASK.md` —
-  HEANG predicted "AX" correctly (PASS) but has not written/run
-  `PassByValueDemo.java` yet.
-- Next topic per the list: #1 Class, #2 Object, #3 Constructor.
+- **AI Prompting track** (new side track, practice alongside Java):
+  - Technique 6 ("I Think" prompt) — not yet practiced, do this first next session
+  - Technique 10 (Role prompting) — not yet covered
+  - Technique 8 (Negative constraints) — not yet covered
+  - Prompt 3 from Concept 3 quiz was skipped — warm-up next session
+- **Java track** — still open:
+  - Pass-by-value exercise: `exercises/phase1-pass-by-value/TASK.md`
+    HEANG predicted "AX" correctly (PASS) but has not written `PassByValueDemo.java` yet.
+  - Next topic per list: #1 Class, #2 Object, #3 Constructor
