@@ -65,7 +65,7 @@ public class PhoneNumberUtil {
          return phoneNumber;
 }
 
-    String normalizedNumber = normalizePhoneNumber(phoneNumber).toString();
+    String normalizedNumber = normalizePhoneNumber(phoneNumber);
 
 
     if (normalizedNumber.startsWith("+1") && normalizedNumber.length() == 12) {

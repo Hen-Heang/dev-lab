@@ -47,6 +47,7 @@ public class OpenApiConfig {
                 .build();
     }
 
+
     @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()

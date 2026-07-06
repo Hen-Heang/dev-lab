@@ -94,5 +94,8 @@ project(':todoapi') {
         // Depend on both common-api and security-api
         implementation project(':common-api')
         implementation project(':security-api')
+
+        // Documentation
+        implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
     }
 }
