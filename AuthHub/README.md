@@ -173,11 +173,13 @@ AuthHub/
 │       ├── validation/     # @ValidIdentifier custom constraint
 │       └── utils/          # JwtSecretGenerator, PhoneNumberUtil
 │
-└── todoapi/               # Sample business API (port 8082)
-    └── src/main/java/com/test/todoapi/
-        ├── controller/  service/  repository/
-        ├── domain/       # TodoList, TodoItem, Tag, ListShare, TodoComment, ...
-        ├── payload/  enums/  util/
+├── todoapi/               # Sample business API (port 8082)
+│   └── src/main/java/com/test/todoapi/
+│       ├── controller/  service/  repository/
+│       ├── domain/       # TodoList, TodoItem, Tag, ListShare, TodoComment, ...
+│       ├── payload/  enums/  util/
+│
+└── legacy/spring-jwt-auth/ # Archived, not part of the Gradle build (see its README)
 ```
 
 ---
@@ -222,3 +224,11 @@ Per-module config lives in `src/main/resources/application.yml`. Key settings
 
 OAuth2 client auto-configuration is intentionally **excluded** in the YAML; the
 OAuth2 flow is wired manually in `security-api`'s `security/` package.
+
+---
+
+## Legacy
+
+`legacy/spring-jwt-auth/` is an earlier standalone JWT-auth practice project,
+kept for reference. It is **not** wired into the Gradle build (not in
+`settings.gradle`) and is superseded by `security-api`. See its own README.
