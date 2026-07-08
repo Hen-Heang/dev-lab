@@ -2,11 +2,13 @@ package com.henheang.securityapi.service.impl;
 
 
 import com.henheang.commonapi.components.common.api.ExitCode;
+import com.henheang.securityapi.domain.AuditEventType;
 import com.henheang.securityapi.domain.PasswordResetToken;
 import com.henheang.securityapi.domain.User;
 import com.henheang.securityapi.exception.AuthException;
 import com.henheang.securityapi.repository.PasswordResetTokenRepository;
 import com.henheang.securityapi.repository.UserRepository;
+import com.henheang.securityapi.service.AuditLogService;
 import com.henheang.securityapi.service.EmailService;
 import com.henheang.securityapi.service.PasswordResetService;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
     private final EmailService emailService;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
 
     @Value("${app.reset-password.token-expiration-minutes:1440}") // Default: 24 hours
     private int tokenExpirationMinutes;
@@ -84,6 +87,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
             }
 
             logger.info("Password reset email sent successfully to: {}", email);
+            auditLogService.log(AuditEventType.PASSWORD_RESET_REQUESTED, user.getId(), user.getEmail());
         } catch (Exception e) {
             logger.error("Error sending password reset email to {}: {}", email, e.getMessage());
             // Delete the token since email couldn't be sent
@@ -136,6 +140,7 @@ public class PasswordResetServiceImpl implements PasswordResetService {
         // Delete the token after a successful password reset
         passwordResetTokenRepository.delete(passwordResetToken);
 
+        auditLogService.log(AuditEventType.PASSWORD_RESET_COMPLETED, user.getId(), user.getEmail());
         logger.info("Password successfully reset for user: {}", user.getEmail());
     }
 }

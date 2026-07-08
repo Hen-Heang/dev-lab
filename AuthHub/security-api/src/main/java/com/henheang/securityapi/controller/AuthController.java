@@ -1,15 +1,17 @@
 package com.henheang.securityapi.controller;
-import com.henheang.commonapi.components.common.api.ApiResponse;
 import com.henheang.commonapi.components.common.api.ExitCode;
+import com.henheang.securityapi.domain.AuditEventType;
 import com.henheang.securityapi.domain.RefreshToken;
 import com.henheang.securityapi.domain.User;
 import com.henheang.securityapi.exception.AuthException;
 import com.henheang.securityapi.payload.*;
 import com.henheang.securityapi.security.JwtTokenProvider;
 import com.henheang.securityapi.security.UserPrincipal;
+import com.henheang.securityapi.service.AuditLogService;
 import com.henheang.securityapi.service.AuthService;
 import com.henheang.securityapi.service.PasswordResetService;
 import com.henheang.securityapi.service.RefreshTokenService;
+import com.henheang.securityapi.service.TokenBlacklistService;
 import com.henheang.securityapi.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -30,7 +33,9 @@ public class AuthController extends BaseController {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordResetService passwordResetService;
     private final RefreshTokenService refreshTokenService;
+    private final TokenBlacklistService tokenBlacklistService;
     private final UserService userService;
+    private final AuditLogService auditLogService;
     @Value("${jwt.expiration}")
     private String jwtExpirationString;
 
@@ -44,6 +49,13 @@ public class AuthController extends BaseController {
     public Object signup(@Valid @RequestBody SignUpRequest signUpRequest) {
         AuthResponse authResponse =(AuthResponse) authService.signup(signUpRequest);
         return ok(authResponse);
+    }
+
+    // Frontend obtains the ID token via Google's own Sign-In SDK and hands it
+    // here - the backend only ever verifies it, it never handles a redirect.
+    @PostMapping("/oauth2/google")
+    public Object loginWithGoogle(@Valid @RequestBody GoogleLoginRequest request) {
+        return ok(authService.loginWithGoogle(request.getIdToken()));
     }
 
     @PostMapping("/refresh")
@@ -63,7 +75,7 @@ public class AuthController extends BaseController {
                     long expiresInSeconds = duration.getSeconds();
                     AuthResponse authResponse = new AuthResponse(
                             accessToken,
-                            rotatedToken.getToken(),
+                            rotatedToken.getRawToken(),
                             expiresInSeconds
                     );
                     return ok(authResponse);
@@ -72,8 +84,22 @@ public class AuthController extends BaseController {
     }
 
     @PostMapping("/logout")
-    public Object logout(@Valid @RequestBody RefreshTokenRequest logoutRequest) {
+    public Object logout(@Valid @RequestBody RefreshTokenRequest logoutRequest,
+                          @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         refreshTokenService.logout(logoutRequest.getRefreshToken());
+
+        // Refresh-token revocation alone doesn't stop the still-valid access
+        // token from working until it naturally expires, so blacklist it too.
+        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith("Bearer ")) {
+            String accessToken = authorizationHeader.substring(7);
+            if (jwtTokenProvider.validateToken(accessToken)) {
+                tokenBlacklistService.revoke(
+                        jwtTokenProvider.getJtiFromToken(accessToken),
+                        jwtTokenProvider.getExpirationFromToken(accessToken)
+                );
+                auditLogService.log(AuditEventType.LOGOUT, jwtTokenProvider.getUserIdFromToken(accessToken), null);
+            }
+        }
         return ok();
     }
 

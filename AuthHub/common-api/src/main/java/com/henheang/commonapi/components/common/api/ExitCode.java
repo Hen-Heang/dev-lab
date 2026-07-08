@@ -14,6 +14,8 @@ public enum ExitCode {
     TOKEN_EXPIRED(1004, "Authentication token has expired"),
     TOKEN_INVALID(1005, "Invalid authentication token"),
     INSUFFICIENT_PERMISSIONS(1006, "Insufficient permissions for this operation"),
+    MFA_REQUIRED(1007, "Multi-factor authentication code required"),
+    MFA_CODE_INVALID(1008, "Invalid multi-factor authentication code"),
 
     // Registration Errors (1100-1199)
     REGISTRATION_FAILED(1100, "Registration failed"),

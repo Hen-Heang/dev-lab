@@ -104,7 +104,17 @@ public class UserServiceImpl implements UserService {
         if (updateUserRequest.getEmailVerified() != null){
             user.setEmailVerified(updateUserRequest.getEmailVerified());
         }
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        // Never return the raw entity - it carries the BCrypt hash and MFA secret.
+        return UserResponse.builder()
+                .id(saved.getId())
+                .name(saved.getName())
+                .email(saved.getEmail())
+                .phoneNumber(saved.getPhoneNumber())
+                .emailVerified(saved.getEmailVerified())
+                .imageUrl(saved.getImageUrl())
+                .provider(saved.getProvider() != null ? saved.getProvider().toString() : "LOCAL")
+                .build();
     }
 
     @Override

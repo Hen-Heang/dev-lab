@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -51,6 +52,10 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(Long userId, String tokenType) {
+        return generateToken(userId, tokenType, Duration.parse(jwtExpirationString));
+    }
+
+    public String generateToken(Long userId, String tokenType, Duration duration) {
         try {
             Map<String, Object> claims = new HashMap<>();
             if (tokenType != null) {
@@ -58,11 +63,11 @@ public class JwtTokenProvider {
             }
 
             Instant now = Instant.now();
-            Duration duration = Duration.parse(jwtExpirationString);
             Instant expiryDate = now.plus(duration);
 
             return Jwts.builder()
                     .setClaims(claims)
+                    .setId(UUID.randomUUID().toString())
                     .setSubject(Long.toString(userId))
                     .setIssuedAt(Date.from(now))
                     .setExpiration(Date.from(expiryDate))
@@ -75,17 +80,31 @@ public class JwtTokenProvider {
     }
 
     public Long getUserIdFromToken(String token) {
+        return Long.parseLong(parseClaims(token).getSubject());
+    }
+
+    public String getJtiFromToken(String token) {
+        return parseClaims(token).getId();
+    }
+
+    public Instant getExpirationFromToken(String token) {
+        return parseClaims(token).getExpiration().toInstant();
+    }
+
+    public String getTokenTypeFromToken(String token) {
+        return (String) parseClaims(token).get("token_type");
+    }
+
+    private Claims parseClaims(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-
-            return Long.parseLong(claims.getSubject());
         } catch (Exception e) {
             throw new AuthException(ExitCode.TOKEN_INVALID,
-                    "Failed to extract user ID from token: " + e.getMessage());
+                    "Failed to parse JWT claims: " + e.getMessage());
         }
     }
 

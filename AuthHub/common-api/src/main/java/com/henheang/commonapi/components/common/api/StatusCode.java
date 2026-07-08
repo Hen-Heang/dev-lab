@@ -59,6 +59,9 @@ public enum StatusCode {
     POINT_PROCESSING_ERROR(50001, "Point processing error", 500),
     INSUFFICIENT_POINTS(50002, "Insufficient points", 500),
 
+    // 429 Too Many Requests
+    TOO_MANY_REQUESTS(42900, "Too many requests, please try again later", 429),
+
     // 503 Service Unavailable
     SEND_OTP_FAILED(50300, "Send OTP failed", 503);
 

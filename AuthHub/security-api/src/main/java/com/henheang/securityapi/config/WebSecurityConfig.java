@@ -33,6 +33,7 @@ public class WebSecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,9 +46,32 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .headers(headers -> headers
+                        // Force HTTPS on every future request once a browser sees it once over TLS
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000)
+                        )
+                        // Swagger UI is served from this same app (permitAll, /swagger-ui/**)
+                        // and needs its own inline script/style - "default-src 'none'" would
+                        // break it, so this is the tightest policy that still lets it load.
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; " +
+                                        "style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'")
+                        )
+                        .frameOptions(frame -> frame.deny())
+                        .contentTypeOptions(contentType -> {})
+                        .referrerPolicy(referrer -> referrer
+                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)
+                        )
+                )
                 .authorizeHttpRequests(auth -> auth
                         // Allow OPTIONS requests for CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // More specific than the "/api/auth/**" permitAll below - order matters,
+                        // the first matching rule wins - these actually need a valid principal.
+                        .requestMatchers("/api/auth/user").authenticated()
+                        .requestMatchers("/api/auth/mfa/setup", "/api/auth/mfa/enable", "/api/auth/mfa/disable").authenticated()
                         .requestMatchers("/api/auth/**", "/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/todo/v1/create").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
@@ -55,21 +79,12 @@ public class WebSecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/v1/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 );
-        // Remove OAuth2 configuration for now
-        // .oauth2Login(oauth2 -> oauth2
-        //         .authorizationEndpoint(endpoint -> endpoint
-        //                 .baseUri("/api/auth/oauth2/authorize")
-        //         )
-        //         .redirectionEndpoint(redirection -> redirection
-        //                 .baseUri("/api/auth/oauth2/callback/*")
-        //         )
-        //         .userInfoEndpoint(userInfo -> userInfo
-        //                 .userService(oAuth2UserService)
-        //         )
-        //         .successHandler(oAuth2AuthenticationSuccessHandler)
-        //         .failureHandler(oAuth2AuthenticationFailureHandler)
-        // );
+        // Google sign-in is handled via ID-token verification (POST
+        // /api/auth/oauth2/google, see GoogleTokenVerifier) rather than the
+        // authorization-code/redirect flow, so no .oauth2Login(...) here.
 
+        // Rate limit brute-forceable endpoints before anything else runs
+        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         // Add JWT filter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

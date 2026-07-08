@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -21,16 +22,18 @@ public class UserPrincipal implements OAuth2User, UserDetails {
     private final String email;
     private final String password;
     private final Boolean emailVerified;
+    private final Instant lockedUntil;
     private final Collection<? extends GrantedAuthority> authorities;
     @Setter
     private Map<String, Object> attributes;
 
     public UserPrincipal(Long id, String email, String password, String name,
-                         Boolean emailVerified, Collection<? extends GrantedAuthority> authorities) {
+                         Boolean emailVerified, Instant lockedUntil, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.email = email;
         this.password = password;
         this.emailVerified = emailVerified;
+        this.lockedUntil = lockedUntil;
         this.authorities = authorities;
     }
 
@@ -45,6 +48,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
                 user.getPassword(),
                 user.getName(),
                 user.getEmailVerified(),
+                user.getLockedUntil(),
                 authorities
         );
     }
@@ -72,7 +76,7 @@ public class UserPrincipal implements OAuth2User, UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return lockedUntil == null || lockedUntil.isBefore(Instant.now());
     }
 
     @Override

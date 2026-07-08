@@ -1,0 +1,272 @@
+# AuthHub
+
+A multi-module **Spring Boot 3.5** monorepo for authentication and a sample
+business API. It provides JWT-based authentication, OAuth2 login, OTP, password
+reset, and email — exposed as reusable modules that other services build on top
+of.
+
+- **Group:** `com.henheang`
+- **Java:** 17 (set in the root `build.gradle`)
+- **Build tool:** Gradle (wrapper included — `./gradlew`)
+- **Spring Boot:** 3.5.15
+- **Database:** PostgreSQL
+
+---
+
+## Module Architecture
+
+AuthHub is a Gradle multi-project build with three modules. Dependencies flow in
+one direction only (no cycles):
+
+```
+common-api   (base library — shared utilities, no app of its own)
+    ▲
+    │
+security-api (authentication service — JWT, OAuth2, OTP, users)  ── runnable
+    ▲
+    │
+todoapi      (sample business API protected by security-api)     ── runnable
+```
+
+| Module         | Port  | bootJar | Purpose |
+|----------------|-------|---------|---------|
+| `common-api`   | 8081  | ❌ off  | Shared library: API response envelopes (`ApiResponse`, `ApiStatus`, `StatusCode`), pagination, enum converters, interceptors. Built as a plain `jar` and consumed by the other modules. |
+| `security-api` | 8080  | ✅ on   | Core authentication service: signup/login, JWT issue & refresh, OAuth2 client login, OTP, password reset, user management, Swagger UI. |
+| `todoapi`      | 8082  | ✅ on   | Example business API (to-do lists/items) that depends on `security-api` for authentication. |
+
+Dependency wiring lives in the **root `build.gradle`** (`subprojects { ... }`
+plus per-project blocks), so most dependencies are declared once at the top.
+
+---
+
+## Prerequisites
+
+1. **JDK 17** (the build targets Java 17).
+2. **PostgreSQL** running locally on port `5432` with a database named `jwt_auth`.
+   - Default credentials in the configs: user `postgres`, password `123`.
+   - Schema is auto-created/updated on startup (`spring.jpa.hibernate.ddl-auto: update`).
+3. *(Optional)* Gmail SMTP credentials for email/OTP/password-reset features.
+
+### Create the database
+
+```bash
+createdb -U postgres jwt_auth
+# or inside psql:  CREATE DATABASE jwt_auth;
+```
+
+### Environment variables (optional but recommended)
+
+The configs default to placeholders; override these for real email and a secure
+JWT secret:
+
+```bash
+export MAIL_USERNAME="your-email@gmail.com"
+export MAIL_PASSWORD="your-gmail-app-password"
+export JWT_SECRET="<base64-64-byte-secret>"   # used by common-api
+```
+
+> ⚠️ `security-api` and `todoapi` currently have a hard-coded JWT secret in their
+> `application.yml`. For anything beyond local dev, move it to the `JWT_SECRET`
+> env var and remove it from the file.
+
+---
+
+## Build
+
+From the `AuthHub/` directory:
+
+```bash
+# Build everything (compiles, runs tests, produces jars)
+./gradlew build
+
+# Build a single module
+./gradlew :security-api:build
+./gradlew :todoapi:build
+
+# Skip tests
+./gradlew build -x test
+```
+
+## Run
+
+Each runnable module is started with the Spring Boot plugin:
+
+```bash
+# Start the auth service (port 8080)
+./gradlew :security-api:bootRun
+
+# Start the todo API (port 8082) — needs security-api concepts/JWT
+./gradlew :todoapi:bootRun
+```
+
+`common-api` is a library (`bootJar` disabled) and is **not** run directly — it
+is pulled in as a dependency by the other two.
+
+Once `security-api` is up, open the API docs:
+
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **Health/ping:** http://localhost:8080/api/public/ping
+
+---
+
+## API Overview (`security-api`, port 8080)
+
+### Authentication — `/api/auth`
+| Method | Path                      | Description |
+|--------|---------------------------|-------------|
+| POST   | `/api/auth/signup`        | Register a new user |
+| POST   | `/api/auth/login`         | Authenticate, returns access + refresh tokens |
+| POST   | `/api/auth/refresh`       | Exchange a refresh token for a new access token |
+| POST   | `/api/auth/logout`        | Invalidate a refresh token |
+| GET    | `/api/auth/user`          | Get the current authenticated user |
+| POST   | `/api/auth/forgot-password` | Start password reset (sends email token) |
+| GET    | `/api/auth/reset-password?token=` | Validate a reset token |
+| POST   | `/api/auth/reset-password`  | Set a new password |
+
+### OTP — `/api/auth/v1/otp`
+| Method | Path                    | Description |
+|--------|-------------------------|-------------|
+| POST   | `/api/auth/v1/otp/send` | Send a one-time passcode |
+
+### Users — `/api/users`
+| Method | Path               | Description |
+|--------|--------------------|-------------|
+| GET    | `/api/users`       | List users |
+| PATCH  | `/api/users/{id}`  | Update a user |
+| DELETE | `/api/users/{id}`  | Delete a user |
+
+### Public — `/api/public`
+| Method | Path               | Description |
+|--------|--------------------|-------------|
+| GET    | `/api/public/ping` | Unauthenticated health check |
+
+### Todo API (`todoapi`, port 8082)
+| Method | Path                   | Description |
+|--------|------------------------|-------------|
+| POST   | `/api/todo/v1/create`  | Create a todo (more endpoints in `TodoController`) |
+
+---
+
+## Project Layout
+
+```
+AuthHub/
+├── build.gradle           # Root: plugins, shared deps, per-module wiring
+├── settings.gradle        # Declares the 3 modules
+├── gradlew / gradlew.bat  # Gradle wrapper
+│
+├── common-api/            # Shared library (no bootJar)
+│   └── src/main/java/com/henheang/commonapi/
+│       └── components/     # ApiResponse, Pagination, enum converters, interceptor
+│
+├── security-api/          # Auth service (port 8080)
+│   └── src/main/java/com/henheang/securityapi/
+│       ├── config/         # WebSecurityConfig, CorsConfig, JwtConfig, OpenApiConfig,
+│       │                   #   DataInitializer, ScheduledTasks
+│       ├── controller/     # Auth, User, Otp, Public, Swagger, Base
+│       ├── domain/         # User, Role, RefreshToken, Otp, PasswordResetToken, AuthProvider
+│       ├── repository/     # Spring Data JPA repositories
+│       ├── security/       # JWT filter/provider, OAuth2 handlers, UserPrincipal, CookieUtils
+│       ├── service/ (+impl)# AuthService, UserService, OtpService, EmailService, etc.
+│       ├── payload/        # Request/response DTOs (+ otp/)
+│       ├── exception/      # GlobalExceptionHandler + custom exceptions
+│       ├── validation/     # @ValidIdentifier custom constraint
+│       └── utils/          # JwtSecretGenerator, PhoneNumberUtil
+│
+└── todoapi/               # Sample business API (port 8082)
+    └── src/main/java/com/test/todoapi/
+        ├── controller/  service/  repository/
+        ├── domain/       # TodoList, TodoItem, Tag, ListShare, TodoComment, ...
+        ├── payload/  enums/  util/
+```
+
+---
+
+## Development Workflow
+
+1. **Start dependencies** — make sure PostgreSQL is running and `jwt_auth` exists.
+2. **Make changes** — shared code goes in `common-api`; auth logic in `security-api`;
+   business features in `todoapi`. Keep the dependency direction
+   (`todoapi → security-api → common-api`) intact to avoid build cycles.
+3. **Run tests** — `./gradlew test` (or per module, e.g. `./gradlew :security-api:test`).
+   Tests use JUnit 5 (`useJUnitPlatform()`).
+4. **Run locally** — `./gradlew :security-api:bootRun`, then exercise endpoints via
+   Swagger UI or an HTTP client. Start `todoapi` too if you need the business API.
+5. **Verify the build** — `./gradlew build` before committing.
+
+### Conventions
+- **Lombok** is enabled across all modules — use it for boilerplate (getters,
+  builders, constructors).
+- **MapStruct** is used for DTO ↔ entity mapping in `common-api` and `security-api`.
+- API responses are wrapped using the envelope types in
+  `common-api` (`ApiResponse` / `ApiStatus` / `StatusCode`) for a consistent shape.
+- Exceptions are translated centrally by `GlobalExceptionHandler` in `security-api`.
+
+---
+
+## Configuration Reference
+
+Per-module config lives in `src/main/resources/application.yml`. Key settings
+(shared shape across modules):
+
+| Key | Default | Notes |
+|-----|---------|-------|
+| `server.port` | 8080 / 8081 / 8082 | One per module |
+| `spring.datasource.url` | `jdbc:postgresql://localhost:5432/jwt_auth` | Point at your DB |
+| `spring.jpa.hibernate.ddl-auto` | `update` | Auto-syncs schema in dev |
+| `jwt.secret` | (base64 key) | **Externalize for non-local use** |
+| `jwt.expiration` | `PT24H` | Access-token lifetime (ISO-8601 duration) |
+| `jwt.refresh-token.expiration` | `P7D` | Refresh-token lifetime |
+| `app.frontend-url` | `http://localhost:3000` | Used for CORS / reset links |
+| `spring.mail.*` | Gmail SMTP | Needs `MAIL_USERNAME` / `MAIL_PASSWORD` |
+
+OAuth2 client auto-configuration is intentionally **excluded** in the YAML; the
+OAuth2 flow is wired manually in `security-api`'s `security/` package.
+
+---
+
+## History: spring_jwt_authentication merge
+
+`spring_jwt_authentication` was an earlier standalone JWT-auth practice
+project (a sibling top-level folder in the dev-lab monorepo). It has since
+been fully retired in favor of `security-api`. Steps taken:
+
+1. **Compared** `spring_jwt_authentication` against `security-api` module by
+   module — package structure, entities, controllers, services, config.
+2. **Found `security-api` is a strict superset**: same JWT signup/login idea,
+   plus OAuth2 login, OTP, password reset, refresh tokens, and a shared
+   `common-api` library that `spring_jwt_authentication` didn't have.
+3. **Moved** the whole project with `git mv spring_jwt_authentication
+   AuthHub/legacy/spring-jwt-auth` (preserved as a rename, not a copy) and
+   deleted the old top-level folder, so it lived under `AuthHub/legacy/` as
+   an archived reference not wired into the Gradle build.
+4. **Re-verified file by file** whether anything unique was worth porting
+   into `security-api`/`common-api` before deleting it for good:
+   - `ApiResponse`, `ApiStatus`, `StatusCode`, `EmptyJsonResponse`,
+     `Pagination`, `GenericEnum` → already in `common-api`.
+   - `AbstractRestController` → equivalent `BaseController` in `security-api`
+     (a superset — also supports `Common` metadata).
+   - `GlobalExceptionHandler`, `BusinessException`, `EntityNotFoundException`
+     → equivalents in `security-api/exception/`.
+   - `AuthenticationController`, `UserService(Impl)`, `AuthenticationService`,
+     `JwtService`, `LoginRequest/Response`, `RegisterRequest` → covered by
+     `AuthController`, `AuthServiceImpl`, `JwtTokenProvider`, `SignUpRequest`,
+     plus refresh tokens/OAuth2/OTP/password reset that never existed here.
+   - `Role`, `RoleEnum`, `RoleRepository`, `RoleSeeder`, `User`,
+     `UserRepository` → duplicated (and more complete) in
+     `security-api/domain`.
+   - `PasswordEncoder` wrapper, `AppConfig` (empty), `ApplicationConfiguration`
+     (`DaoAuthenticationProvider` boilerplate) → generic, already done in
+     `WebSecurityConfig`.
+   - `DateTimeGeneration` / `GeneratedDateTime` — a custom Hibernate
+     `BeforeExecutionGenerator` for pattern-formatted timestamps — the one
+     mildly novel piece, but **dead code**: never applied to any entity even
+     in its own project.
+   - `JWTAuthenticationFilter`, `SecurityConfig` → superseded by
+     `JwtAuthenticationFilter` + `WebSecurityConfig` (which also handles
+     OAuth2 + CORS).
+   - **Conclusion:** nothing unique remained to port.
+5. **Removed** `AuthHub/legacy/spring-jwt-auth/` entirely. Full history of the
+   original project (pre-monorepo) is preserved outside this repo in
+   `C:\Practice\repo-backups\`; within `dev-lab`, the merge/move is captured
+   in git history at commit `aa58e61` on the `main` branch.

@@ -15,9 +15,21 @@ public class AuthResponse {
     private Long expiresIn;
     private String tokenType = "Bearer";
 
+    // When true, accessToken/refreshToken are absent and mfaToken must be
+    // exchanged (with a valid TOTP code) via /api/auth/mfa/verify instead.
+    private boolean mfaRequired = false;
+    private String mfaToken;
+
     public AuthResponse(String accessToken, String refreshToken, Long expiresIn) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expiresIn = expiresIn;
+    }
+
+    public static AuthResponse mfaRequired(String mfaToken) {
+        AuthResponse response = new AuthResponse();
+        response.mfaRequired = true;
+        response.mfaToken = mfaToken;
+        return response;
     }
 }

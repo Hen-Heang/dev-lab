@@ -46,6 +46,11 @@ jwt:
   refresh-token:
     expiration: P7D
 
+google:
+  # Comma-separated OAuth 2.0 client IDs from Google Cloud Console that are
+  # allowed as the ID token audience. Empty means Google sign-in is disabled.
+  client-ids: ${GOOGLE_CLIENT_IDS:}
+
 app:
   frontend-url: http://localhost:3000
   reset-password:

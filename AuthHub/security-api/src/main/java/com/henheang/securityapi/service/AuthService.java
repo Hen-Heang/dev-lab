@@ -12,4 +12,8 @@ public interface AuthService {
     Object signup(@Valid SignUpRequest signUpRequest);
 
     Object login(@Valid LoginRequest loginRequest);
+
+    Object verifyMfaAndIssueTokens(String mfaToken, String code);
+
+    Object loginWithGoogle(String idToken);
 }
