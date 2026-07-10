@@ -1,9 +1,9 @@
 # AuthHub
 
 A multi-module **Spring Boot 3.5** monorepo for authentication and a sample
-business API. It provides JWT-based authentication, OAuth2 login, OTP, password
-reset, and email — exposed as reusable modules that other services build on top
-of.
+business API. It provides JWT-based authentication (with refresh + revocation),
+Google ID-token login, MFA (TOTP), password reset, audit logging, and rate
+limiting — exposed as reusable modules that other services build on top of.
 
 - **Group:** `com.henheang`
 - **Java:** 17 (set in the root `build.gradle`)
@@ -22,16 +22,16 @@ one direction only (no cycles):
 common-api   (base library — shared utilities, no app of its own)
     ▲
     │
-security-api (authentication service — JWT, OAuth2, OTP, users)  ── runnable
+security-api (authentication service — JWT, Google login, MFA, audit)  ── runnable
     ▲
     │
-todoapi      (sample business API protected by security-api)     ── runnable
+todoapi      (sample business API protected by security-api)           ── runnable
 ```
 
 | Module         | Port  | bootJar | Purpose |
 |----------------|-------|---------|---------|
-| `common-api`   | 8081  | ❌ off  | Shared library: API response envelopes (`ApiResponse`, `ApiStatus`, `StatusCode`), pagination, enum converters, interceptors. Built as a plain `jar` and consumed by the other modules. |
-| `security-api` | 8080  | ✅ on   | Core authentication service: signup/login, JWT issue & refresh, OAuth2 client login, OTP, password reset, user management, Swagger UI. |
+| `common-api`   | —     | ❌ off  | Shared library: API response envelopes (`ApiResponse`, `ApiStatus`, `StatusCode`), pagination, enum converters, interceptors. Built as a plain `jar` and consumed by the other modules — not run directly. |
+| `security-api` | 8080  | ✅ on   | Core authentication service: signup/login, JWT issue/refresh/revocation, Google ID-token login, MFA, password reset, user management, audit logging, rate limiting, Swagger UI. |
 | `todoapi`      | 8082  | ✅ on   | Example business API (to-do lists/items) that depends on `security-api` for authentication. |
 
 Dependency wiring lives in the **root `build.gradle`** (`subprojects { ... }`
@@ -45,7 +45,7 @@ plus per-project blocks), so most dependencies are declared once at the top.
 2. **PostgreSQL** running locally on port `5432` with a database named `jwt_auth`.
    - Default credentials in the configs: user `postgres`, password `123`.
    - Schema is auto-created/updated on startup (`spring.jpa.hibernate.ddl-auto: update`).
-3. *(Optional)* Gmail SMTP credentials for email/OTP/password-reset features.
+3. *(Optional)* Gmail SMTP credentials for email-based features (password reset).
 
 ### Create the database
 
@@ -62,12 +62,12 @@ JWT secret:
 ```bash
 export MAIL_USERNAME="your-email@gmail.com"
 export MAIL_PASSWORD="your-gmail-app-password"
-export JWT_SECRET="<base64-64-byte-secret>"   # used by common-api
+export JWT_SECRET="<base64-64-byte-secret>"
 ```
 
-> ⚠️ `security-api` and `todoapi` currently have a hard-coded JWT secret in their
-> `application.yml`. For anything beyond local dev, move it to the `JWT_SECRET`
-> env var and remove it from the file.
+> ⚠️ `security-api` currently has a hard-coded JWT secret in `application.yml`
+> for local dev. For anything beyond local dev, move it to the `JWT_SECRET`
+> env var and never commit a real secret.
 
 ---
 
@@ -95,7 +95,7 @@ Each runnable module is started with the Spring Boot plugin:
 # Start the auth service (port 8080)
 ./gradlew :security-api:bootRun
 
-# Start the todo API (port 8082) — needs security-api concepts/JWT
+# Start the todo API (port 8082) — needs security-api's JWT to authenticate
 ./gradlew :todoapi:bootRun
 ```
 
@@ -112,21 +112,25 @@ Once `security-api` is up, open the API docs:
 ## API Overview (`security-api`, port 8080)
 
 ### Authentication — `/api/auth`
-| Method | Path                      | Description |
-|--------|---------------------------|-------------|
-| POST   | `/api/auth/signup`        | Register a new user |
-| POST   | `/api/auth/login`         | Authenticate, returns access + refresh tokens |
-| POST   | `/api/auth/refresh`       | Exchange a refresh token for a new access token |
-| POST   | `/api/auth/logout`        | Invalidate a refresh token |
-| GET    | `/api/auth/user`          | Get the current authenticated user |
-| POST   | `/api/auth/forgot-password` | Start password reset (sends email token) |
+| Method | Path                          | Description |
+|--------|-------------------------------|-------------|
+| POST   | `/api/auth/signup`            | Register a new user |
+| POST   | `/api/auth/login`              | Authenticate, returns access + refresh tokens |
+| POST   | `/api/auth/oauth2/google`      | Log in with a Google ID token |
+| POST   | `/api/auth/refresh`            | Exchange a refresh token for a new access token |
+| POST   | `/api/auth/logout`             | Revoke a refresh token |
+| GET    | `/api/auth/user`               | Get the current authenticated user |
+| POST   | `/api/auth/forgot-password`    | Start password reset (sends email token) |
 | GET    | `/api/auth/reset-password?token=` | Validate a reset token |
-| POST   | `/api/auth/reset-password`  | Set a new password |
+| POST   | `/api/auth/reset-password`     | Set a new password |
 
-### OTP — `/api/auth/v1/otp`
-| Method | Path                    | Description |
-|--------|-------------------------|-------------|
-| POST   | `/api/auth/v1/otp/send` | Send a one-time passcode |
+### MFA — `/api/auth/mfa`
+| Method | Path             | Description |
+|--------|------------------|-------------|
+| POST   | `/api/auth/mfa/setup`   | Generate a new TOTP secret/QR for the current user |
+| POST   | `/api/auth/mfa/enable`  | Confirm a TOTP code and enable MFA |
+| POST   | `/api/auth/mfa/disable` | Disable MFA for the current user |
+| POST   | `/api/auth/mfa/verify`  | Verify a TOTP code during login |
 
 ### Users — `/api/users`
 | Method | Path               | Description |
@@ -135,15 +139,24 @@ Once `security-api` is up, open the API docs:
 | PATCH  | `/api/users/{id}`  | Update a user |
 | DELETE | `/api/users/{id}`  | Delete a user |
 
+### Audit logs — `/api/admin/audit-logs`
+| Method | Path                              | Description |
+|--------|------------------------------------|-------------|
+| GET    | `/api/admin/audit-logs`            | List audit events (paginated) |
+| GET    | `/api/admin/audit-logs/user/{userId}` | List audit events for a specific user (paginated) |
+
 ### Public — `/api/public`
 | Method | Path               | Description |
 |--------|--------------------|-------------|
 | GET    | `/api/public/ping` | Unauthenticated health check |
 
+Requests are also subject to `RateLimitingFilter`, and access/refresh tokens can
+be revoked via `TokenBlacklistService` (backed by `RevokedToken`).
+
 ### Todo API (`todoapi`, port 8082)
 | Method | Path                   | Description |
 |--------|------------------------|-------------|
-| POST   | `/api/todo/v1/create`  | Create a todo (more endpoints in `TodoController`) |
+| POST   | `/api/todo/v1/create`  | Create a todo list for the authenticated user |
 
 ---
 
@@ -163,12 +176,16 @@ AuthHub/
 │   └── src/main/java/com/henheang/securityapi/
 │       ├── config/         # WebSecurityConfig, CorsConfig, JwtConfig, OpenApiConfig,
 │       │                   #   DataInitializer, ScheduledTasks
-│       ├── controller/     # Auth, User, Otp, Public, Swagger, Base
-│       ├── domain/         # User, Role, RefreshToken, Otp, PasswordResetToken, AuthProvider
+│       ├── controller/     # AuthController, UserController, AuditController,
+│       │                   #   MfaController, PublicController, SwaggerController
+│       ├── domain/         # User, Role, RefreshToken, RevokedToken, PasswordResetToken,
+│       │                   #   AuditEvent, AuditEventType, AuthProvider
 │       ├── repository/     # Spring Data JPA repositories
-│       ├── security/       # JWT filter/provider, OAuth2 handlers, UserPrincipal, CookieUtils
-│       ├── service/ (+impl)# AuthService, UserService, OtpService, EmailService, etc.
-│       ├── payload/        # Request/response DTOs (+ otp/)
+│       ├── security/       # JWT filter/provider, RateLimitingFilter, UserPrincipal,
+│       │                   #   oauth/GoogleTokenVerifier (ID-token verification)
+│       ├── service/ (+impl)# AuthService, UserService, MfaService, AuditLogService,
+│       │                   #   TokenBlacklistService, RefreshTokenService, EmailService, ...
+│       ├── payload/        # Request/response DTOs (+ MFA request/response types)
 │       ├── exception/      # GlobalExceptionHandler + custom exceptions
 │       ├── validation/     # @ValidIdentifier custom constraint
 │       └── utils/          # JwtSecretGenerator, PhoneNumberUtil
@@ -213,17 +230,18 @@ Per-module config lives in `src/main/resources/application.yml`. Key settings
 
 | Key | Default | Notes |
 |-----|---------|-------|
-| `server.port` | 8080 / 8081 / 8082 | One per module |
+| `server.port` | 8080 (`security-api`) / 8082 (`todoapi`) | One per runnable module |
 | `spring.datasource.url` | `jdbc:postgresql://localhost:5432/jwt_auth` | Point at your DB |
-| `spring.jpa.hibernate.ddl-auto` | `update` | Auto-syncs schema in dev |
-| `jwt.secret` | (base64 key) | **Externalize for non-local use** |
+| `spring.jpa.hibernate.ddl-auto` | `update` | Auto-syncs schema in dev, no manual migrations yet |
+| `jwt.secret` | (hard-coded key) | **Externalize via `JWT_SECRET` beyond local dev** |
 | `jwt.expiration` | `PT24H` | Access-token lifetime (ISO-8601 duration) |
 | `jwt.refresh-token.expiration` | `P7D` | Refresh-token lifetime |
 | `app.frontend-url` | `http://localhost:3000` | Used for CORS / reset links |
 | `spring.mail.*` | Gmail SMTP | Needs `MAIL_USERNAME` / `MAIL_PASSWORD` |
 
-OAuth2 client auto-configuration is intentionally **excluded** in the YAML; the
-OAuth2 flow is wired manually in `security-api`'s `security/` package.
+Google login is verified via ID token (`security/oauth/GoogleTokenVerifier`) —
+there is no cookie-based OAuth2 redirect flow, and the old custom OTP feature has
+been removed. See `docs/security-api-state.md` for the current state of this module.
 
 ---
 
