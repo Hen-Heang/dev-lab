@@ -1,7 +1,0 @@
-# Bank Data Export - 2026-04-02T18:03:25.416067700
-# This is a simplified export format
-BANK_NAME:Enhanced Java Community Bank
-EXPORT_DATE:2026-04-02T18:03:25.416067700
-TOTAL_CUSTOMERS:1
-TOTAL_ACCOUNTS:1
-TOTAL_LOANS:1
