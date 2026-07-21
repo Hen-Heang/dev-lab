@@ -6,10 +6,19 @@ My personal lab for practice projects and learning. Each folder is an independen
 |---------|-------------|-------|
 | [heang-api-center](heang-api-center/) | API practice project | Spring Boot, Maven |
 | [heang-dev-lab](heang-dev-lab/) | Store admin system (Korean enterprise stack) | Spring Boot, MyBatis, PostgreSQL, Thymeleaf, Maven |
-| [java-core-mastery-lab](java-core-mastery-lab/) | Core Java practice — OOP, collections, generics, design patterns, mini projects | Java 21 |
 | [spring-boot-lab](spring-boot-lab/) | Spring Boot learning path, organized by topic (web, data, security, messaging, testing, cloud, AI) | Spring Boot |
-| [AuthHub](AuthHub/) | Authentication hub — multi-module project (common-api, security-api, todoapi) | Spring Boot, Gradle |
-| [spring_jwt_authentication](spring_jwt_authentication/) | JWT authentication practice | Spring Boot, Gradle |
+| [AuthHub](AuthHub/) | Authentication hub — multi-module project (common-api, security-api, todoapi); legacy JWT practice lives under `AuthHub/legacy/spring-jwt-auth` | Spring Boot, Gradle |
+
+## Moved out
+
+These used to live here but were extracted into their own standalone repos (each with full history preserved) because bundling everything into one IntelliJ project made per-project source roots/SDKs impossible to configure correctly:
+
+- `java-core-mastery-lab` → `E:\API\java-core-mastery-lab`
+- `dev-learning-notes & AI` → `E:\API\dev-learning-notes & AI`
+
+## Known issue
+
+`spring-boot-lab/AuthHub` is a stale duplicate of the root `AuthHub` that has diverged with unique, unmerged work (OAuth2/OTP auth flow) not present in the root copy (which has its own unique MFA/audit work instead). Neither has been deleted — needs a manual merge decision before cleanup.
 
 ## Notes
 
